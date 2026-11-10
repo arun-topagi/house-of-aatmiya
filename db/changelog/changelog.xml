@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+  <changeSet id="001-create-enums-and-core-tables" author="arun">
+    <sql splitStatements="true" stripComments="true">
+      CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+      DO $$ BEGIN
+        CREATE TYPE admin_role AS ENUM ('ADMIN', 'SUPER_ADMIN');
+      EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+      DO $$ BEGIN
+        CREATE TYPE storefront_mode AS ENUM ('ALL', 'DRESS_AND_GIFTS', 'FOODS_ONLY');
+      EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+      DO $$ BEGIN
+        CREATE TYPE order_status AS ENUM (
+          'PENDING_CALL',
+          'CONFIRMED_AWAITING_UPI',
+          'PAID_IN_PREP',
+          'READY_FOR_DISPATCH',
+          'COMPLETED',
+          'CANCELLED'
+        );
+      EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+      DO $$ BEGIN
+        CREATE TYPE payment_method AS ENUM ('UPI_ADVANCE', 'PARTIAL_UPI_ADVANCE');
+      EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+      DO $$ BEGIN
+        CREATE TYPE delivery_type AS ENUM ('SOCIETY_HAND_DELIVERY', 'COURIER_DELIVERY');
+      EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+      CREATE TABLE IF NOT EXISTS "store_settings" (
+        "id" VARCHAR(50) PRIMARY KEY DEFAULT 'default',
+        "default_mode" storefront_mode NOT NULL DEFAULT 'ALL',
+        "allow_mode_switching" BOOLEAN NOT NULL DEFAULT true,
+        "next_food_batch_label" VARCHAR(255) DEFAULT 'Next Fresh Batch: Friday (Orders close Wednesday)',
+        "whatsapp_phone" VARCHAR(20) NOT NULL DEFAULT '919876543210',
+        "upi_vpa" VARCHAR(100) NOT NULL DEFAULT 'aatmiya@okaxis',
+        "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "admins" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "email" VARCHAR(255) UNIQUE NOT NULL,
+        "password_hash" VARCHAR(255) NOT NULL,
+        "role" admin_role DEFAULT 'ADMIN',
+        "failed_login_attempts" INT DEFAULT 0,
+        "is_blocked" BOOLEAN DEFAULT false,
+        "name" VARCHAR(255),
+        "phone" VARCHAR(20),
+        "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "admin_sessions" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "admin_id" UUID NOT NULL REFERENCES "admins"("id") ON DELETE CASCADE,
+        "refresh_token" VARCHAR NOT NULL,
+        "created_at" TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "activity_logs" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "admin_id" UUID NOT NULL REFERENCES "admins"("id"),
+        "action" VARCHAR(255) NOT NULL,
+        "entity_type" VARCHAR(100) NOT NULL,
+        "entity_id" UUID NOT NULL,
+        "metadata" JSONB,
+        "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "categories" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "slug" VARCHAR(100) UNIQUE NOT NULL,
+        "mode_group" storefront_mode NOT NULL DEFAULT 'ALL',
+        "name" JSONB NOT NULL,
+        "description" JSONB,
+        "is_active" BOOLEAN DEFAULT true,
+        "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "products" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "category_id" UUID REFERENCES "categories"("id"),
+        "sku" VARCHAR(100) UNIQUE NOT NULL,
+        "name" JSONB NOT NULL,
+        "description" JSONB NOT NULL,
+        "usage" JSONB,
+        "images" JSONB,
+        "is_featured" BOOLEAN DEFAULT false,
+        "is_active" BOOLEAN DEFAULT true,
+        "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "product_variants" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "product_id" UUID NOT NULL REFERENCES "products"("id") ON DELETE CASCADE,
+        "size_pack" VARCHAR(255) NOT NULL,
+        "cost_price" DECIMAL(10, 2) NOT NULL DEFAULT 0,
+        "price" DECIMAL(10, 2) NOT NULL,
+        "stock_qty" INT NOT NULL DEFAULT 10,
+        "is_made_to_batch" BOOLEAN NOT NULL DEFAULT false,
+        "is_available" BOOLEAN DEFAULT true,
+        "is_active" BOOLEAN DEFAULT true
+      );
+
+      CREATE TABLE IF NOT EXISTS "users" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "phone" VARCHAR(20) UNIQUE NOT NULL,
+        "name" VARCHAR(255),
+        "is_phone_verified" BOOLEAN NOT NULL DEFAULT true,
+        "opt_in_marketing" BOOLEAN DEFAULT true,
+        "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "otp_codes" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "phone_number" VARCHAR(20) NOT NULL,
+        "code" VARCHAR(6) NOT NULL,
+        "expires_at" TIMESTAMP NOT NULL,
+        "is_used" BOOLEAN NOT NULL DEFAULT false,
+        "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "sessions" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "user_id" UUID NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+        "refresh_token" TEXT NOT NULL,
+        "expires_at" TIMESTAMP NOT NULL,
+        "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "addresses" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "user_id" UUID NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+        "flat_or_house" VARCHAR(255) NOT NULL,
+        "area_or_society" VARCHAR(255) NOT NULL,
+        "city" VARCHAR(255) NOT NULL,
+        "state" VARCHAR(100) NOT NULL DEFAULT 'Maharashtra',
+        "pincode" VARCHAR(10) NOT NULL,
+        "landmark" VARCHAR(255),
+        "is_society_resident" BOOLEAN NOT NULL DEFAULT false,
+        "latitude" DECIMAL(10, 7),
+        "longitude" DECIMAL(10, 7),
+        "google_maps_url" VARCHAR(500),
+        "is_mobile_confirmed" BOOLEAN NOT NULL DEFAULT false,
+        "is_default" BOOLEAN DEFAULT true,
+        "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "orders" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "order_number" VARCHAR(50) UNIQUE NOT NULL,
+        "user_id" UUID NOT NULL REFERENCES "users"("id"),
+        "address_id" UUID NOT NULL REFERENCES "addresses"("id"),
+        "total_amount" DECIMAL(10, 2) NOT NULL,
+        "advance_paid" DECIMAL(10, 2) NOT NULL DEFAULT 0,
+        "delivery_type" delivery_type DEFAULT 'SOCIETY_HAND_DELIVERY',
+        "status" order_status DEFAULT 'PENDING_CALL',
+        "payment_method" payment_method DEFAULT 'UPI_ADVANCE',
+        "gift_note" TEXT,
+        "admin_notes" TEXT,
+        "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "order_items" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "order_id" UUID NOT NULL REFERENCES "orders"("id") ON DELETE CASCADE,
+        "variant_id" UUID NOT NULL REFERENCES "product_variants"("id"),
+        "quantity" INT NOT NULL,
+        "price_at_purchase" DECIMAL(10, 2) NOT NULL
+      );
+    </sql>
+  </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,13 @@
+import { Controller, Get } from '@nestjs/common';
+
+@Controller('health')
+export class HealthController {
+  @Get()
+  check() {
+    return {
+      status: 'ok',
+      service: 'The House of Aatmiya API',
+      timestamp: new Date().toISOString(),
+    };
+  }
+}

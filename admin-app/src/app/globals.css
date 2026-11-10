@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-serif: var(--font-playfair), Georgia, serif;
+}
+
+@layer base {
+  html,
+  body {
+    background-color: #f8f6f1;
+    color: #1c1917;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-sans);
+  }
+}

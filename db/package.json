@@ -1,0 +1,20 @@
+{
+  "name": "db",
+  "version": "1.0.0",
+  "description": "Database migrations and seeding module for The House of Aatmiya using Liquibase and pg",
+  "private": true,
+  "scripts": {
+    "status": "node scripts/run-liquibase.js status",
+    "update": "node scripts/run-liquibase.js update",
+    "update-sql": "node scripts/run-liquibase.js update-sql",
+    "rollback": "node scripts/run-liquibase.js rollback-count 1",
+    "seed": "node scripts/seed.js",
+    "seed:products": "node scripts/seed-products.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "liquibase": "^4.27.0",
+    "pg": "^8.11.5"
+  }
+}

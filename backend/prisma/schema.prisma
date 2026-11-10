@@ -1,0 +1,219 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model StoreSettings {
+  id                 String         @id @default("default") @db.VarChar(50)
+  defaultMode        StorefrontMode @default(ALL) @map("default_mode")
+  allowModeSwitching Boolean        @default(true) @map("allow_mode_switching")
+  nextFoodBatchLabel String?        @default("Next Fresh Batch: Friday (Orders close Wednesday)") @map("next_food_batch_label") @db.VarChar(255)
+  whatsappPhone      String         @default("919876543210") @map("whatsapp_phone") @db.VarChar(20)
+  upiVpa             String         @default("aatmiya@okaxis") @map("upi_vpa") @db.VarChar(100)
+  updatedAt          DateTime?      @default(now()) @updatedAt @map("updated_at")
+
+  @@map("store_settings")
+}
+
+model Admin {
+  id                  String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email               String           @unique @db.VarChar(255)
+  passwordHash        String           @map("password_hash") @db.VarChar(255)
+  role                AdminRole?       @default(ADMIN)
+  failedLoginAttempts Int?             @default(0) @map("failed_login_attempts")
+  isBlocked           Boolean?         @default(false) @map("is_blocked")
+  createdAt           DateTime?        @default(now()) @map("created_at")
+  updatedAt           DateTime?        @default(now()) @updatedAt @map("updated_at")
+  name                String?          @db.VarChar(255)
+  phone               String?          @db.VarChar(20)
+  activity_logs       activity_logs[]
+  admin_sessions      admin_sessions[]
+
+  @@map("admins")
+}
+
+model Category {
+  id          String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug        String         @unique @db.VarChar(100)
+  modeGroup   StorefrontMode @default(ALL) @map("mode_group")
+  name        Json
+  description Json?
+  isActive    Boolean?       @default(true) @map("is_active")
+  createdAt   DateTime?      @default(now()) @map("created_at")
+  updatedAt   DateTime?      @default(now()) @updatedAt @map("updated_at")
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoryId  String?          @map("category_id") @db.Uuid
+  sku         String           @unique @db.VarChar(100)
+  name        Json
+  description Json
+  usage       Json?
+  images      Json?
+  isFeatured  Boolean?         @default(false) @map("is_featured")
+  isActive    Boolean?         @default(true) @map("is_active")
+  createdAt   DateTime?        @default(now()) @map("created_at")
+  updatedAt   DateTime?        @default(now()) @updatedAt @map("updated_at")
+  variants    ProductVariant[]
+  category    Category?        @relation(fields: [categoryId], references: [id], onUpdate: NoAction)
+
+  @@map("products")
+}
+
+model ProductVariant {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId     String        @map("product_id") @db.Uuid
+  sizePack      String        @map("size_pack") @db.VarChar(255)
+  costPrice     Decimal       @default(0) @map("cost_price") @db.Decimal(10, 2)
+  price         Decimal       @db.Decimal(10, 2)
+  stockQty      Int           @default(10) @map("stock_qty")
+  isMadeToBatch Boolean       @default(false) @map("is_made_to_batch")
+  isAvailable   Boolean?      @default(true) @map("is_available")
+  isActive      Boolean?      @default(true) @map("is_active")
+  order_items   order_items[]
+  product       Product       @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("product_variants")
+}
+
+model activity_logs {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  admin_id    String    @db.Uuid
+  action      String    @db.VarChar(255)
+  entity_type String    @db.VarChar(100)
+  entity_id   String    @db.Uuid
+  metadata    Json?
+  created_at  DateTime? @default(now())
+  admins      Admin     @relation(fields: [admin_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model addresses {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id             String    @db.Uuid
+  flat_or_house       String    @db.VarChar(255)
+  area_or_society     String    @db.VarChar(255)
+  city                String    @db.VarChar(255)
+  state               String    @default("Maharashtra") @db.VarChar(100)
+  pincode             String    @db.VarChar(10)
+  landmark            String?   @db.VarChar(255)
+  is_society_resident Boolean   @default(false)
+  latitude            Decimal?  @db.Decimal(10, 7)
+  longitude           Decimal?  @db.Decimal(10, 7)
+  google_maps_url     String?   @db.VarChar(500)
+  is_mobile_confirmed Boolean   @default(false)
+  is_default          Boolean?  @default(true)
+  created_at          DateTime? @default(now())
+  updated_at          DateTime? @default(now())
+  users               users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  orders              orders[]
+}
+
+model order_items {
+  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id          String         @db.Uuid
+  variant_id        String         @db.Uuid
+  quantity          Int
+  price_at_purchase Decimal        @db.Decimal(10, 2)
+  orders            orders         @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  product_variants  ProductVariant @relation(fields: [variant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model orders {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_number   String          @unique @db.VarChar(50)
+  user_id        String          @db.Uuid
+  address_id     String          @db.Uuid
+  total_amount   Decimal         @db.Decimal(10, 2)
+  advance_paid   Decimal         @default(0) @db.Decimal(10, 2)
+  delivery_type  delivery_type?  @default(SOCIETY_HAND_DELIVERY)
+  status         order_status?   @default(PENDING_CALL)
+  payment_method payment_method? @default(UPI_ADVANCE)
+  gift_note      String?
+  admin_notes    String?
+  created_at     DateTime?       @default(now())
+  updated_at     DateTime?       @default(now())
+  order_items    order_items[]
+  addresses      addresses       @relation(fields: [address_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users          users           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model otp_codes {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phone_number String   @db.VarChar(20)
+  code         String   @db.VarChar(6)
+  expires_at   DateTime
+  is_used      Boolean  @default(false)
+  created_at   DateTime @default(now())
+}
+
+model sessions {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id       String   @db.Uuid
+  refresh_token String
+  expires_at    DateTime
+  created_at    DateTime @default(now())
+  users         users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model users {
+  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phone             String      @unique @db.VarChar(20)
+  name              String?     @db.VarChar(255)
+  is_phone_verified Boolean     @default(true)
+  opt_in_marketing  Boolean?    @default(true)
+  created_at        DateTime?   @default(now())
+  updated_at        DateTime?   @default(now())
+  addresses         addresses[]
+  orders            orders[]
+  sessions          sessions[]
+}
+
+model admin_sessions {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  admin_id      String    @db.Uuid
+  refresh_token String    @db.VarChar
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  admins        Admin     @relation(fields: [admin_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+enum AdminRole {
+  ADMIN
+  SUPER_ADMIN
+
+  @@map("admin_role")
+}
+
+enum StorefrontMode {
+  ALL
+  DRESS_AND_GIFTS
+  FOODS_ONLY
+
+  @@map("storefront_mode")
+}
+
+enum order_status {
+  PENDING_CALL
+  CONFIRMED_AWAITING_UPI
+  PAID_IN_PREP
+  READY_FOR_DISPATCH
+  COMPLETED
+  CANCELLED
+}
+
+enum payment_method {
+  UPI_ADVANCE
+  PARTIAL_UPI_ADVANCE
+}
+
+enum delivery_type {
+  SOCIETY_HAND_DELIVERY
+  COURIER_DELIVERY
+}
