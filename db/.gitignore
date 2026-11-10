@@ -1,0 +1,8 @@
+node_modules/
+lib/
+
+
+# Env files
+.env
+.env.*
+!.env.example
