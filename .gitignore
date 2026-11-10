@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+**/node_modules/
+/.pnp
+.pnp.*
+
+# Build & compiled outputs
+dist/
+**/dist/
+build/
+**/build/
+.next/
+**/.next/
+out/
+**/out/
+
+# Liquibase drivers
+db/lib/
+
+# Environment variables & secrets
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Testing & coverage
+coverage/
+**/coverage/
+.nyc_output/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# TypeScript & Next.js caches
+*.tsbuildinfo
+**/next-env.d.ts
+.vercel/
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
