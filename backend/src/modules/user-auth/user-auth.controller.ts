@@ -14,11 +14,13 @@ import {
   MobileConfirmAddressDto,
   RefreshTokenDto,
   SendOtpDto,
+  UpdateUserProfileDto,
   UpsertAddressDto,
   VerifyOtpDto,
 } from './dto/user-auth.dto';
 import {
   AuthenticatedUserRequest,
+  OptionalUserJwtGuard,
   UserJwtGuard,
 } from './guards/user-jwt.guard';
 
@@ -50,6 +52,15 @@ export class UserAuthController {
     return this.userAuthService.getProfile(req.user.userId);
   }
 
+  @Put('profile')
+  @UseGuards(UserJwtGuard)
+  async updateProfile(
+    @Req() req: { user: AuthenticatedUserRequest },
+    @Body() dto: UpdateUserProfileDto,
+  ) {
+    return this.userAuthService.updateProfile(req.user.userId, dto);
+  }
+
   @Put('address')
   @UseGuards(UserJwtGuard)
   async upsertAddress(
@@ -60,8 +71,15 @@ export class UserAuthController {
   }
 
   @Post('confirm-address-mobile')
+  @UseGuards(OptionalUserJwtGuard)
   @HttpCode(HttpStatus.OK)
-  async confirmAddressFromMobile(@Body() dto: MobileConfirmAddressDto) {
-    return this.userAuthService.confirmAddressFromMobile(dto);
+  async confirmAddressFromMobile(
+    @Req() req: { user?: AuthenticatedUserRequest | null },
+    @Body() dto: MobileConfirmAddressDto,
+  ) {
+    return this.userAuthService.confirmAddressFromMobile(
+      dto,
+      req.user?.userId,
+    );
   }
 }

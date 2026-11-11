@@ -12,6 +12,7 @@ import {
   MobileConfirmAddressDto,
   RefreshTokenDto,
   SendOtpDto,
+  UpdateUserProfileDto,
   UpsertAddressDto,
   VerifyOtpDto,
 } from './dto/user-auth.dto';
@@ -65,12 +66,18 @@ export class UserAuthService {
             type: 'body',
             parameters: [{ type: 'text', text: otpCode }],
           },
+          {
+            type: 'button',
+            sub_type: 'url',
+            index: '0',
+            parameters: [{ type: 'text', text: otpCode }],
+          },
         ],
       },
     };
 
     try {
-      const response = await fetch(url, {
+      let response = await fetch(url, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -79,13 +86,50 @@ export class UserAuthService {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
+      let data = await response.json();
+
+      // If button component failed, retry without button component (matches Raitha-Bandhu)
+      if (!response.ok && data?.error?.message?.includes('component')) {
         this.logger.warn(
-          `WhatsApp Cloud API returned ${response.status}; falling back to dev OTP log`,
+          'Retrying WhatsApp OTP template payload without button component...',
+        );
+        const retryPayload = {
+          messaging_product: 'whatsapp',
+          to: recipient,
+          type: 'template',
+          template: {
+            name: templateName,
+            language: { code: 'en_US' },
+            components: [
+              {
+                type: 'body',
+                parameters: [{ type: 'text', text: otpCode }],
+              },
+            ],
+          },
+        };
+
+        response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(retryPayload),
+        });
+        data = await response.json();
+      }
+
+      if (!response.ok) {
+        const errorDetail =
+          data?.error?.message || `HTTP ${response.status}`;
+        this.logger.warn(
+          `WhatsApp Cloud API returned (${errorDetail}); falling back to dev OTP log`,
         );
         return { deliveredViaMeta: false };
       }
 
+      this.logger.log(`WhatsApp OTP delivered successfully to ${recipient}`);
       return { deliveredViaMeta: true };
     } catch (err: any) {
       this.logger.warn(`WhatsApp Cloud API error: ${err.message}`);
@@ -293,10 +337,40 @@ export class UserAuthService {
         phone: user.phone,
         name: user.name || '',
         isPhoneVerified: Boolean(user.is_phone_verified),
+        optInMarketing: Boolean(user.opt_in_marketing),
       },
       address: user.addresses[0]
         ? this.formatAddress(user.addresses[0])
         : null,
+    };
+  }
+
+  async updateProfile(userId: string, dto: UpdateUserProfileDto) {
+    const existing = await this.prisma.users.findUnique({
+      where: { id: userId },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Customer profile not found');
+    }
+
+    const updated = await this.prisma.users.update({
+      where: { id: userId },
+      data: {
+        ...(dto.name !== undefined ? { name: dto.name.trim() } : {}),
+        ...(dto.optInMarketing !== undefined
+          ? { opt_in_marketing: dto.optInMarketing }
+          : {}),
+        updated_at: new Date(),
+      },
+    });
+
+    return {
+      id: updated.id,
+      phone: updated.phone,
+      name: updated.name || '',
+      isPhoneVerified: Boolean(updated.is_phone_verified),
+      optInMarketing: Boolean(updated.opt_in_marketing),
     };
   }
 
@@ -368,11 +442,18 @@ export class UserAuthService {
     return this.formatAddress(saved);
   }
 
-  async confirmAddressFromMobile(dto: MobileConfirmAddressDto) {
+  async confirmAddressFromMobile(
+    dto: MobileConfirmAddressDto,
+    authenticatedUserId?: string,
+  ) {
     const phone = this.normalizePhone(dto.phone);
-    const user = await this.prisma.users.findUnique({
-      where: { phone },
-    });
+    const user = authenticatedUserId
+      ? await this.prisma.users.findUnique({
+          where: { id: authenticatedUserId },
+        })
+      : await this.prisma.users.findUnique({
+          where: { phone },
+        });
 
     if (!user) {
       throw new NotFoundException(

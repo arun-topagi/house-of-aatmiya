@@ -1,6 +1,6 @@
 import React from 'react';
-import { StorefrontModeView } from '@/features';
+import { HomeView } from '@/features';
 
 export default function HomePage() {
-  return <StorefrontModeView />;
+  return <HomeView />;
 }

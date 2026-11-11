@@ -1,15 +1,22 @@
-"use client";
+/* eslint-disable @next/next/no-img-element */
+'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Header, Footer } from '@/components';
-import { apiClient, FALLBACK_PRODUCTS } from '@/services/api';
+import { Header, AdvisoryStrip, BottomNav, Footer } from '@/components';
+import { Badge, Button, Icon } from '@/elements';
+import {
+  FALLBACK_PRODUCTS,
+  orderService,
+  userAuthService,
+} from '@/services';
 import {
   addToCart,
   clearCart,
   removeFromCart,
   setGiftNote,
   setUserCredentials,
+  syncUserProfile,
   updateQuantity,
   updateSavedAddress,
   useAppDispatch,
@@ -59,8 +66,67 @@ export const CheckoutView: React.FC = () => {
   const [gpsStatus, setGpsStatus] = useState<string | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
 
+  // Sync local form fields when userAuth hydrates from localStorage
+  React.useEffect(() => {
+    if (user.phone) setPhoneInput((prev) => prev || user.phone);
+    if (user.name) setCustomerName((prev) => prev || user.name);
+    if (address.flatOrHouse)
+      setFlatOrHouse((prev) => prev || address.flatOrHouse);
+    if (address.areaOrSociety)
+      setAreaOrSociety((prev) => prev || address.areaOrSociety);
+    if (address.city) setCity((prev) => prev || address.city);
+    if (address.state) setStateName((prev) => prev || address.state);
+    if (address.pincode) setPincode((prev) => prev || address.pincode);
+    if (address.landmark) setLandmark((prev) => prev || address.landmark);
+    setIsSocietyResident(address.isSocietyResident ?? true);
+    if (address.latitude !== null) setLatitude(address.latitude);
+    if (address.longitude !== null) setLongitude(address.longitude);
+    if (address.googleMapsUrl)
+      setGoogleMapsUrl((prev) => prev || address.googleMapsUrl);
+    if (address.isMobileConfirmed) setIsMobileConfirmed(true);
+  }, [user, address]);
+
+  // Fetch latest user details via guarded GET /user-auth/profile when authenticated
+  React.useEffect(() => {
+    if (!isAuthenticated || !accessToken) return;
+    userAuthService
+      .getProfile()
+      .then((res) => {
+        if (res?.user) {
+          dispatch(
+            syncUserProfile({
+              user: res.user,
+              address: res.address || undefined,
+            }),
+          );
+          if (res.user.name) setCustomerName(res.user.name);
+          if (res.user.phone) setPhoneInput(res.user.phone);
+        }
+        if (res?.address) {
+          if (res.address.flatOrHouse) setFlatOrHouse(res.address.flatOrHouse);
+          if (res.address.areaOrSociety)
+            setAreaOrSociety(res.address.areaOrSociety);
+          if (res.address.city) setCity(res.address.city);
+          if (res.address.state) setStateName(res.address.state);
+          if (res.address.pincode) setPincode(res.address.pincode);
+          if (res.address.landmark !== undefined)
+            setLandmark(res.address.landmark || '');
+          setIsSocietyResident(Boolean(res.address.isSocietyResident));
+          if (res.address.latitude !== null) setLatitude(res.address.latitude);
+          if (res.address.longitude !== null)
+            setLongitude(res.address.longitude);
+          if (res.address.googleMapsUrl)
+            setGoogleMapsUrl(res.address.googleMapsUrl);
+        }
+      })
+      .catch(() => {
+        // Handled by HttpFactory 401 interceptor if session expired
+      });
+  }, [isAuthenticated, accessToken, dispatch]);
+
   // Stage 4: Order Submission State
   const [placingOrder, setPlacingOrder] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
   const [confirmedOrder, setConfirmedOrder] = useState<{
     orderNumber: string;
     totalAmount: number;
@@ -74,13 +140,30 @@ export const CheckoutView: React.FC = () => {
   const shippingFee = isSocietyResident || subtotal >= 1500 ? 0 : 90;
   const totalPayable = subtotal + shippingFee;
 
-  // Check if a valid delivery address is already saved
   const hasSavedAddress = Boolean(
     (flatOrHouse || address.flatOrHouse)?.trim() &&
       (areaOrSociety || address.areaOrSociety)?.trim() &&
       (city || address.city)?.trim() &&
       /^\d{6}$/.test((pincode || address.pincode || '').trim()),
   );
+
+  // Dynamic Stepper: hides Stage 2 (OTP) & Stage 3 (Address) when already verified & saved
+  const visibleSteps = [
+    { id: 1 as CheckoutStage, label: 'Review Bag', icon: 'shopping_bag' },
+    ...(!isAuthenticated
+      ? [{ id: 2 as CheckoutStage, label: 'WhatsApp OTP', icon: 'chat' }]
+      : []),
+    ...(!isAuthenticated || !hasSavedAddress || stage === 3
+      ? [
+          {
+            id: 3 as CheckoutStage,
+            label: 'GPS & Address',
+            icon: 'my_location',
+          },
+        ]
+      : []),
+    { id: 4 as CheckoutStage, label: 'Place Order', icon: 'verified' },
+  ];
 
   const handleLoadSampleItems = () => {
     const snack = FALLBACK_PRODUCTS[0];
@@ -129,20 +212,18 @@ export const CheckoutView: React.FC = () => {
 
     setAuthLoading(true);
     try {
-      const res = await apiClient.post('/user-auth/send-otp', {
-        phone: cleaned,
-      });
-      const payload = res.data?.data || res.data;
+      const payload = await userAuthService.sendOtp(cleaned);
       setOtpSent(true);
       if (payload?.devOtp) {
         setDevOtpHint(payload.devOtp);
         setOtpCode(payload.devOtp);
       }
-    } catch {
-      // Offline / fallback dev OTP so checkout can still be verified seamlessly
-      setOtpSent(true);
-      setDevOtpHint('4210');
-      setOtpCode('4210');
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === 'object' && 'message' in err
+          ? String((err as { message: unknown }).message)
+          : 'Could not send WhatsApp OTP. Please check your connection and try again.';
+      setAuthError(message);
     } finally {
       setAuthLoading(false);
     }
@@ -159,18 +240,17 @@ export const CheckoutView: React.FC = () => {
 
     setAuthLoading(true);
     try {
-      const res = await apiClient.post('/user-auth/verify-otp', {
+      const payload = await userAuthService.verifyOtp({
         phone: cleaned,
         otp: otpCode.trim(),
         name: customerName.trim() || 'Aatmiya Guest',
       });
-      const payload = res.data?.data || res.data;
       dispatch(
         setUserCredentials({
           accessToken: payload.accessToken,
           refreshToken: payload.refreshToken,
           user: payload.user,
-          address: payload.address,
+          address: payload.address || undefined,
         }),
       );
       if (payload.address) {
@@ -191,26 +271,13 @@ export const CheckoutView: React.FC = () => {
           (payload.address?.pincode || pincode)?.trim(),
       );
 
-      // Skip Stage 3 if returning user already has a saved address
       setStage(returnedAddrValid ? 4 : 3);
-    } catch {
-      if (otpCode.trim() === devOtpHint || otpCode.trim() === '4210') {
-        dispatch(
-          setUserCredentials({
-            accessToken: 'local-verified-token',
-            refreshToken: 'local-refresh-token',
-            user: {
-              id: 'local-user',
-              phone: cleaned,
-              name: customerName.trim() || 'Aatmiya Guest',
-              isPhoneVerified: true,
-            },
-          }),
-        );
-        setStage(hasSavedAddress ? 4 : 3);
-      } else {
-        setAuthError('Invalid OTP code. Please check WhatsApp and try again.');
-      }
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === 'object' && 'message' in err
+          ? String((err as { message: unknown }).message)
+          : 'Invalid OTP code. Please check WhatsApp and try again.';
+      setAuthError(message);
     } finally {
       setAuthLoading(false);
     }
@@ -304,30 +371,24 @@ export const CheckoutView: React.FC = () => {
 
     dispatch(updateSavedAddress(updatedAddr));
 
-    if (accessToken && accessToken !== 'local-verified-token') {
+    if (isAuthenticated && accessToken) {
       try {
-        await apiClient.put(
-          '/user-auth/address',
-          {
-            name: updatedAddr.fullName,
-            flatOrHouse: updatedAddr.flatOrHouse,
-            areaOrSociety: updatedAddr.areaOrSociety,
-            city: updatedAddr.city,
-            state: updatedAddr.state,
-            pincode: updatedAddr.pincode,
-            landmark: updatedAddr.landmark,
-            isSocietyResident: updatedAddr.isSocietyResident,
-            latitude: updatedAddr.latitude ?? undefined,
-            longitude: updatedAddr.longitude ?? undefined,
-            googleMapsUrl: updatedAddr.googleMapsUrl || undefined,
-            isMobileConfirmed: updatedAddr.isMobileConfirmed,
-          },
-          {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          },
-        );
+        await userAuthService.updateAddress({
+          name: updatedAddr.fullName,
+          flatOrHouse: updatedAddr.flatOrHouse,
+          areaOrSociety: updatedAddr.areaOrSociety,
+          city: updatedAddr.city,
+          state: updatedAddr.state,
+          pincode: updatedAddr.pincode,
+          landmark: updatedAddr.landmark,
+          isSocietyResident: updatedAddr.isSocietyResident,
+          latitude: updatedAddr.latitude ?? undefined,
+          longitude: updatedAddr.longitude ?? undefined,
+          googleMapsUrl: updatedAddr.googleMapsUrl || undefined,
+          isMobileConfirmed: updatedAddr.isMobileConfirmed,
+        });
       } catch {
-        // Proceed smoothly even if backend is offline
+        // Proceed smoothly
       }
     }
 
@@ -337,6 +398,16 @@ export const CheckoutView: React.FC = () => {
   // --- STAGE 4: PLACE ORDER & OPEN WHATSAPP ---
   const handlePlaceOrder = async () => {
     if (cartItems.length === 0) return;
+    setOrderError(null);
+
+    if (!isAuthenticated || !accessToken) {
+      setStage(2);
+      setAuthError(
+        'Please verify your WhatsApp number via OTP before placing your order.',
+      );
+      return;
+    }
+
     setPlacingOrder(true);
 
     const effectivePhone = (user.phone || phoneInput)
@@ -344,67 +415,41 @@ export const CheckoutView: React.FC = () => {
       .slice(-10);
 
     try {
-      const res = await apiClient.post(
-        '/orders',
-        {
-          items: cartItems.map((i) => ({
-            variantId: i.variantId,
-            quantity: i.quantity,
-          })),
-          address: {
-            fullName: customerName.trim() || user.name || 'Aatmiya Guest',
-            phone: effectivePhone,
-            flatOrHouse: flatOrHouse.trim(),
-            areaOrSociety: areaOrSociety.trim(),
-            city: city.trim(),
-            state: stateName.trim(),
-            pincode: pincode.trim(),
-            landmark: landmark.trim(),
-            isSocietyResident,
-            latitude: latitude ?? undefined,
-            longitude: longitude ?? undefined,
-            googleMapsUrl: googleMapsUrl || undefined,
-            isMobileConfirmed,
-          },
-          giftNote: giftNote.trim() || undefined,
+      const orderData = await orderService.createOrder({
+        items: cartItems.map((i) => ({
+          variantId: i.variantId,
+          quantity: i.quantity,
+        })),
+        address: {
+          fullName: customerName.trim() || user.name || 'Aatmiya Guest',
+          phone: effectivePhone,
+          flatOrHouse: flatOrHouse.trim(),
+          areaOrSociety: areaOrSociety.trim(),
+          city: city.trim(),
+          state: stateName.trim(),
+          pincode: pincode.trim(),
+          landmark: landmark.trim(),
+          isSocietyResident,
+          latitude: latitude ?? undefined,
+          longitude: longitude ?? undefined,
+          googleMapsUrl: googleMapsUrl || undefined,
+          isMobileConfirmed,
         },
-        accessToken
-          ? { headers: { Authorization: `Bearer ${accessToken}` } }
-          : undefined,
-      );
+        giftNote: giftNote.trim() || undefined,
+      });
 
-      const orderData = res.data?.data || res.data;
       dispatch(clearCart());
       setConfirmedOrder({
         orderNumber: orderData.orderNumber,
         totalAmount: orderData.totalAmount,
         whatsappConciergeUrl: orderData.whatsappConciergeUrl,
       });
-    } catch {
-      // Fallback WhatsApp concierge URL if backend DB is offline
-      const fallbackOrderNum = `HOA-${Math.floor(1001 + Math.random() * 899)}`;
-      const lines = cartItems.map(
-        (i) =>
-          `• ${i.quantity}x ${i.productName} (${i.sizePack}) — ₹${i.unitPrice * i.quantity}`,
-      );
-      const waText = [
-        `Namaste Snehal! 🙏 I have placed Order *#${fallbackOrderNum}* on *The House of Aatmiya*:`,
-        '',
-        ...lines,
-        '',
-        `*Total Payable:* ₹${totalPayable}`,
-        `*Customer:* ${customerName || user.name} (+91 ${effectivePhone} — OTP Verified ✅)`,
-        `*Address:* ${flatOrHouse}, ${areaOrSociety}, ${city} - ${pincode}`,
-        ...(googleMapsUrl ? [`*GPS Pin:* ${googleMapsUrl}`] : []),
-        ...(giftNote ? [`*Gift Note:* "${giftNote}"`] : []),
-      ].join('\n');
-
-      dispatch(clearCart());
-      setConfirmedOrder({
-        orderNumber: fallbackOrderNum,
-        totalAmount: totalPayable,
-        whatsappConciergeUrl: `https://wa.me/919876543210?text=${encodeURIComponent(waText)}`,
-      });
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === 'object' && 'message' in err
+          ? String((err as { message: unknown }).message)
+          : 'Failed to place order. Please check your login session and try again.';
+      setOrderError(message);
     } finally {
       setPlacingOrder(false);
     }
@@ -420,684 +465,873 @@ export const CheckoutView: React.FC = () => {
       : '/confirm-address';
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#faf7f2]">
+    <div className="min-h-screen flex flex-col bg-surface">
       <Header />
 
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <div>
-          <span className="text-xs font-bold uppercase tracking-widest text-[#6b2d26]">
-            The House of Aatmiya Concierge
-          </span>
-          <h1 className="font-serif text-3xl font-bold text-[#1b2a4a] mt-1">
-            Verified WhatsApp & GPS Checkout
-          </h1>
-          <p className="text-xs sm:text-sm text-[#57534e] mt-1">
-            No online payment gateway needed. Verify your WhatsApp number via
-            OTP, pin your delivery GPS location, and Snehal will call you
-            personally to confirm sizes & share the UPI link.
-          </p>
-        </div>
+      <main className="flex-1 pt-16 sm:pt-20 pb-28">
+        <AdvisoryStrip />
 
-        {/* 4-Stage Stepper */}
-        {!confirmedOrder && (
-          <div className="grid grid-cols-4 gap-2 bg-white p-3 rounded-2xl border border-[#e5dccb]">
-            {[
-              { id: 1, label: '1. Review Bag' },
-              { id: 2, label: '2. WhatsApp OTP' },
-              { id: 3, label: '3. GPS & Address' },
-              { id: 4, label: '4. Place Order' },
-            ].map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => {
-                  if (s.id < stage) setStage(s.id as CheckoutStage);
-                }}
-                className={`py-2 px-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                  stage === s.id
-                    ? 'bg-[#1b2a4a] text-white'
-                    : stage > s.id
-                    ? 'bg-[#234d36]/15 text-[#234d36]'
-                    : 'bg-[#faf7f2] text-[#57534e]'
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
+          {/* Page Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <div className="flex items-center gap-2 text-label-sm text-on-surface-variant mb-1">
+                <Link
+                  href="/"
+                  className="hover:text-primary transition-colors flex items-center gap-1"
+                >
+                  <Icon name="home" className="text-sm" />
+                  <span>Home</span>
+                </Link>
+                <Icon name="chevron_right" className="text-sm" />
+                <span className="text-primary font-bold">Checkout</span>
+              </div>
+              <h1 className="font-headline-lg text-headline-lg text-on-surface">
+                Verified WhatsApp &amp; GPS Checkout
+              </h1>
+            </div>
+
+            <Link
+              href="/products"
+              className="inline-flex items-center gap-1.5 text-label-md font-label-md text-primary hover:underline"
+            >
+              <Icon name="arrow_back" className="text-base" />
+              <span>Continue Browsing</span>
+            </Link>
+          </div>
+
+          {/* Dynamic Checkout Stepper */}
+          {!confirmedOrder && (
+            <div className="w-full bg-surface-container-lowest rounded-2xl p-4 sm:p-5 mb-6 shadow-[0_6px_20px_rgba(27,42,74,0.04)] border border-outline-variant/25">
+              <div
+                className={`grid gap-2 ${
+                  visibleSteps.length === 2
+                    ? 'grid-cols-2'
+                    : visibleSteps.length === 3
+                      ? 'grid-cols-3'
+                      : 'grid-cols-4'
                 }`}
               >
-                {s.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* CONFIRMED ORDER VIEW */}
-        {confirmedOrder ? (
-          <div className="bg-white rounded-3xl p-6 sm:p-10 border border-[#e5dccb] shadow-sm text-center space-y-5">
-            <div className="w-14 h-14 rounded-full bg-[#234d36]/15 text-[#234d36] mx-auto flex items-center justify-center text-2xl font-bold">
-              ✓
-            </div>
-            <span className="inline-block px-3.5 py-1 rounded-full bg-amber-100 text-[#6b2d26] text-xs font-bold">
-              Order Reference #{confirmedOrder.orderNumber}
-            </span>
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#1b2a4a]">
-              Thank You! Your Order Has Been Registered.
-            </h2>
-            <p className="text-sm text-[#57534e] max-w-xl mx-auto leading-relaxed">
-              Click the button below to send your formatted order summary and
-              GPS pin to <strong>Snehal on WhatsApp</strong>. She will call you
-              shortly to confirm your adult dress/kurta sizes or fresh food
-              batch and share the UPI payment request.
-            </p>
-
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <a
-                href={confirmedOrder.whatsappConciergeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-6 py-3.5 rounded-full bg-[#234d36] hover:bg-[#2e6647] text-white text-sm font-bold shadow-md transition"
-              >
-                📲 Send Order #{confirmedOrder.orderNumber} to Snehal on WhatsApp
-              </a>
-              <Link
-                href="/"
-                className="px-5 py-3.5 rounded-full border border-[#e5dccb] text-xs font-bold text-[#1b2a4a]"
-              >
-                Back to Storefront
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* STAGE 1: CART REVIEW */}
-            {stage === 1 && (
-              <div className="bg-white rounded-2xl p-5 sm:p-6 border border-[#e5dccb] space-y-5">
-                <h2 className="font-serif text-xl font-bold text-[#1b2a4a]">
-                  Stage 1: Review Your Selected Items
-                </h2>
-
-                {cartItems.length === 0 ? (
-                  <div className="py-10 text-center space-y-4">
-                    <p className="text-sm text-[#57534e]">
-                      Your concierge bag is currently empty.
-                    </p>
-                    <div className="flex flex-wrap justify-center gap-3">
-                      <button
-                        type="button"
-                        onClick={handleLoadSampleItems}
-                        className="px-4 py-2.5 rounded-xl bg-[#6b2d26] text-white text-xs font-bold cursor-pointer"
-                      >
-                        + Load Sample Items (1 Kids&apos; Snack + 1 Adult Cotton Dress)
-                      </button>
-                      <Link
-                        href="/"
-                        className="px-4 py-2.5 rounded-xl bg-[#1b2a4a] text-white text-xs font-bold"
-                      >
-                        Browse Catalogue
-                      </Link>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="divide-y divide-[#f3ede2]">
-                      {cartItems.map((item) => (
-                        <div
-                          key={item.variantId}
-                          className="py-4 flex items-center justify-between gap-4"
-                        >
-                          <div className="flex items-center gap-3.5">
-                            <img
-                              src={item.imageUrl}
-                              alt={item.productName}
-                              className="w-16 h-16 rounded-xl object-cover border border-[#e5dccb]"
-                            />
-                            <div>
-                              <h4 className="font-serif font-bold text-sm sm:text-base text-[#1b2a4a]">
-                                {item.productName}
-                              </h4>
-                              <p className="text-xs text-[#57534e]">
-                                Option: <strong>{item.sizePack}</strong> • ₹
-                                {item.unitPrice} each
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                dispatch(
-                                  updateQuantity({
-                                    variantId: item.variantId,
-                                    quantity: item.quantity - 1,
-                                  }),
-                                )
-                              }
-                              className="w-7 h-7 rounded-lg bg-[#f3ede2] text-[#1b2a4a] font-bold cursor-pointer"
-                            >
-                              -
-                            </button>
-                            <span className="text-xs font-bold w-6 text-center">
-                              {item.quantity}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                dispatch(
-                                  updateQuantity({
-                                    variantId: item.variantId,
-                                    quantity: item.quantity + 1,
-                                  }),
-                                )
-                              }
-                              className="w-7 h-7 rounded-lg bg-[#f3ede2] text-[#1b2a4a] font-bold cursor-pointer"
-                            >
-                              +
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                dispatch(removeFromCart(item.variantId))
-                              }
-                              className="ml-2 text-xs text-red-700 hover:underline cursor-pointer"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[#1b2a4a] mb-1">
-                        Optional Family / Festive Gift Note:
-                      </label>
-                      <input
-                        type="text"
-                        value={giftNote}
-                        onChange={(e) => dispatch(setGiftNote(e.target.value))}
-                        placeholder="e.g., Warm Diwali wishes from our family to yours!"
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#faf7f2] border border-[#e5dccb] text-xs"
-                      />
-                    </div>
-
-                    <div className="pt-3 border-t border-[#e5dccb] flex items-center justify-between">
-                      <div>
-                        <span className="text-xs text-[#57534e]">
-                          Bag Subtotal:
-                        </span>
-                        <span className="text-xl font-bold text-[#1b2a4a] ml-2">
-                          ₹{subtotal}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (!isAuthenticated) {
-                            setStage(2);
-                          } else if (!hasSavedAddress) {
-                            setStage(3);
-                          } else {
-                            // Already logged in AND address is saved -> skip Stage 2 & Stage 3!
-                            setStage(4);
-                          }
-                        }}
-                        className="px-6 py-3 rounded-xl bg-[#1b2a4a] hover:bg-[#283d6b] text-white text-xs sm:text-sm font-bold cursor-pointer"
-                      >
-                        {!isAuthenticated
-                          ? 'Continue to WhatsApp OTP Login →'
-                          : !hasSavedAddress
-                          ? 'Continue to GPS & Address →'
-                          : 'Proceed Directly to Place Order (OTP & Address Saved) →'}
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* STAGE 2: WHATSAPP OTP VERIFICATION */}
-            {stage === 2 && (
-              <div className="bg-white rounded-2xl p-5 sm:p-6 border border-[#e5dccb] space-y-5 max-w-xl mx-auto">
-                <div>
-                  <span className="text-xs font-bold uppercase text-[#234d36]">
-                    Genuine Buyer Verification
-                  </span>
-                  <h2 className="font-serif text-xl font-bold text-[#1b2a4a] mt-0.5">
-                    Stage 2: Verify Your WhatsApp Mobile Number
-                  </h2>
-                  <p className="text-xs text-[#57534e] mt-1">
-                    We verify every buyer via WhatsApp OTP so Snehal can reach
-                    you directly on call and WhatsApp for size/batch
-                    confirmation.
-                  </p>
-                </div>
-
-                {authError && (
-                  <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-semibold">
-                    {authError}
-                  </div>
-                )}
-
-                {!otpSent ? (
-                  <form onSubmit={handleSendWhatsAppOtp} className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-bold text-[#1b2a4a] mb-1">
-                        Your Full Name
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
-                        placeholder="e.g., Priya Kulkarni"
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#faf7f2] border border-[#e5dccb] text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-[#1b2a4a] mb-1">
-                        10-Digit WhatsApp Mobile Number
-                      </label>
-                      <div className="flex items-center rounded-xl bg-[#faf7f2] border border-[#e5dccb] px-3.5 py-2.5">
-                        <span className="text-sm font-bold text-[#57534e] pr-3 border-r border-[#e5dccb]">
-                          +91
-                        </span>
-                        <input
-                          type="tel"
-                          required
-                          maxLength={10}
-                          value={phoneInput}
-                          onChange={(e) =>
-                            setPhoneInput(e.target.value.replace(/\D/g, ''))
-                          }
-                          placeholder="9876543210"
-                          className="w-full pl-3 bg-transparent text-sm font-bold focus:outline-none"
-                        />
-                      </div>
-                    </div>
+                {visibleSteps.map((s, idx) => {
+                  const isActive = stage === s.id;
+                  const isCompleted = stage > s.id;
+                  return (
                     <button
-                      type="submit"
-                      disabled={authLoading}
-                      className="w-full py-3 rounded-xl bg-[#234d36] hover:bg-[#2e6647] text-white text-xs sm:text-sm font-bold cursor-pointer"
+                      key={s.id}
+                      type="button"
+                      onClick={() => {
+                        if (s.id < stage) setStage(s.id);
+                      }}
+                      className={`flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl transition-all text-left cursor-pointer ${
+                        isActive
+                          ? 'bg-primary text-on-primary shadow-sm'
+                          : isCompleted
+                            ? 'bg-tertiary-fixed/70 text-on-tertiary-fixed hover:bg-tertiary-fixed'
+                            : 'bg-surface-container-low text-on-surface-variant'
+                      }`}
                     >
-                      {authLoading
-                        ? 'Sending WhatsApp OTP...'
-                        : '📲 Send 4-Digit OTP on WhatsApp'}
-                    </button>
-                  </form>
-                ) : (
-                  <form
-                    onSubmit={handleVerifyWhatsAppOtp}
-                    className="space-y-4"
-                  >
-                    <div className="p-3 rounded-xl bg-[#234d36]/10 border border-[#234d36]/25 text-xs text-[#234d36] font-semibold">
-                      OTP sent to WhatsApp <strong>+91 {phoneInput}</strong>
-                      {devOtpHint && (
-                        <span className="ml-2 px-2 py-0.5 rounded bg-white text-[#1b2a4a] font-bold">
-                          Instant Dev OTP: {devOtpHint}
-                        </span>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[#1b2a4a] mb-1">
-                        Enter 4-Digit WhatsApp OTP
-                      </label>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={6}
-                        required
-                        value={otpCode}
-                        onChange={(e) =>
-                          setOtpCode(e.target.value.replace(/\D/g, ''))
-                        }
-                        className="w-full px-4 py-3 rounded-xl bg-[#faf7f2] border-2 border-[#1b2a4a] text-center text-lg font-bold tracking-[0.4em]"
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setOtpSent(false)}
-                        className="px-4 py-3 rounded-xl border border-[#e5dccb] text-xs font-bold text-[#57534e] cursor-pointer"
-                      >
-                        Change Number
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={authLoading}
-                        className="flex-1 py-3 rounded-xl bg-[#1b2a4a] text-white text-xs sm:text-sm font-bold cursor-pointer"
-                      >
-                        {authLoading
-                          ? 'Verifying...'
-                          : '✓ Verify OTP & Continue to GPS Address'}
-                      </button>
-                    </div>
-                  </form>
-                )}
-              </div>
-            )}
-
-            {/* STAGE 3: GPS LOCATION & MOBILE ADDRESS CONFIRMATION */}
-            {stage === 3 && (
-              <div className="bg-white rounded-2xl p-5 sm:p-6 border border-[#e5dccb] space-y-5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#f3ede2] pb-4">
-                  <div>
-                    <span className="text-xs font-bold uppercase text-[#234d36]">
-                      ✅ Verified WhatsApp: +91 {user.phone || phoneInput}
-                    </span>
-                    <h2 className="font-serif text-xl font-bold text-[#1b2a4a] mt-0.5">
-                      Stage 3: Delivery Address & Exact GPS Location
-                    </h2>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleDetectGpsLocation}
-                    className="px-4 py-2.5 rounded-xl bg-[#234d36] hover:bg-[#2e6647] text-white text-xs font-bold shadow-xs cursor-pointer flex items-center gap-1.5 self-start"
-                  >
-                    <span>📍 Detect My Exact GPS Location</span>
-                  </button>
-                </div>
-
-                {gpsStatus && (
-                  <div className="p-3.5 rounded-xl bg-[#234d36]/10 border border-[#234d36]/30 text-xs text-[#234d36] flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-bold">✓ {gpsStatus}</span>
-                    {googleMapsUrl && (
-                      <a
-                        href={googleMapsUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline font-bold"
-                      >
-                        View Pin on Google Maps ↗
-                      </a>
-                    )}
-                  </div>
-                )}
-
-                {addressError && (
-                  <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-semibold">
-                    {addressError}
-                  </div>
-                )}
-
-                <form
-                  onSubmit={handleSaveAddressAndContinue}
-                  className="space-y-4"
-                >
-                  {/* Housing Society Resident Toggle */}
-                  <div className="p-3.5 rounded-xl bg-[#f3ede2] border border-[#e5dccb] flex items-center justify-between">
-                    <div>
-                      <div className="text-xs font-bold text-[#1b2a4a]">
-                        🏠 Are you in our Housing Society / First Circle?
-                      </div>
-                      <div className="text-[11px] text-[#57534e]">
-                        Enables FREE hand-delivery by Snehal & priority batch
-                        drop.
-                      </div>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={isSocietyResident}
-                      onChange={(e) => setIsSocietyResident(e.target.checked)}
-                      className="w-5 h-5 accent-[#1b2a4a] cursor-pointer"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-[#1b2a4a] mb-1">
-                        Recipient Full Name *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#faf7f2] border border-[#e5dccb] text-xs font-semibold"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[#1b2a4a] mb-1">
-                        Flat / Tower / House No. *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={flatOrHouse}
-                        onChange={(e) => setFlatOrHouse(e.target.value)}
-                        placeholder="e.g., Tower B - Flat 402"
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#faf7f2] border border-[#e5dccb] text-xs font-semibold"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[#1b2a4a] mb-1">
-                        Housing Society / Street / Area *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={areaOrSociety}
-                        onChange={(e) => setAreaOrSociety(e.target.value)}
-                        placeholder="e.g., Kalpataru Harmony Society, Wakad"
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#faf7f2] border border-[#e5dccb] text-xs font-semibold"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[#1b2a4a] mb-1">
-                        Landmark
-                      </label>
-                      <input
-                        type="text"
-                        value={landmark}
-                        onChange={(e) => setLandmark(e.target.value)}
-                        placeholder="e.g., Near Clubhouse Gate"
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#faf7f2] border border-[#e5dccb] text-xs font-semibold"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[#1b2a4a] mb-1">
-                        City *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#faf7f2] border border-[#e5dccb] text-xs font-semibold"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[#1b2a4a] mb-1">
-                        6-Digit Pincode *
-                      </label>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={6}
-                        required
-                        value={pincode}
-                        onChange={(e) =>
-                          setPincode(e.target.value.replace(/\D/g, ''))
-                        }
-                        placeholder="411057"
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#faf7f2] border border-[#e5dccb] text-xs font-semibold"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Mobile Address Confirmation Card */}
-                  <div className="p-4 rounded-2xl bg-[#faf7f2] border border-[#e5dccb] space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#1b2a4a]">
-                        📱 Confirm Address & GPS Pin from Mobile
-                      </span>
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
-                          isMobileConfirmed
-                            ? 'bg-[#234d36]/15 text-[#234d36]'
-                            : 'bg-amber-100 text-[#6b2d26]'
+                      <div
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                          isActive
+                            ? 'bg-primary-container text-primary-fixed'
+                            : isCompleted
+                              ? 'bg-tertiary text-on-tertiary'
+                              : 'bg-surface-container text-on-surface-variant'
                         }`}
                       >
-                        {isMobileConfirmed
-                          ? '✓ GPS & Mobile Confirmed'
-                          : 'Optional Mobile GPS Link'}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-[#57534e]">
-                      Ordering from a laptop or want to confirm your exact
-                      doorstep GPS pin from your phone? Tap below or open our
-                      mobile confirmation link on your phone:
-                    </p>
-                    <div className="flex flex-wrap items-center gap-3 pt-1">
-                      <label className="inline-flex items-center gap-2 text-xs font-semibold text-[#1b2a4a] cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={isMobileConfirmed}
-                          onChange={(e) =>
-                            setIsMobileConfirmed(e.target.checked)
-                          }
-                          className="w-4 h-4 accent-[#234d36]"
+                        <Icon
+                          name={isCompleted ? 'check' : s.icon}
+                          className="text-lg"
                         />
-                        <span>
-                          I confirm this delivery address & GPS pin on my mobile
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[10px] font-bold uppercase tracking-wider block opacity-80">
+                          Step {idx + 1}
                         </span>
-                      </label>
-
-                      <a
-                        href={`https://wa.me/91${(
-                          user.phone ||
-                          phoneInput ||
-                          ''
-                        )
-                          .replace(/\D/g, '')
-                          .slice(
-                            -10,
-                          )}?text=${encodeURIComponent(
-                          `Tap this link on your mobile to confirm your GPS delivery pin for The House of Aatmiya: ${mobileConfirmDeepLink}`,
-                        )}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs font-bold text-[#6b2d26] underline"
-                      >
-                        Send Mobile GPS Confirm Link to My WhatsApp ↗
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 flex justify-between items-center">
-                    <button
-                      type="button"
-                      onClick={() => setStage(2)}
-                      className="text-xs font-bold text-[#57534e] hover:underline cursor-pointer"
-                    >
-                      ← Back
+                        <span className="font-label-md text-label-md truncate block">
+                          {s.label}
+                        </span>
+                      </div>
                     </button>
-                    <button
-                      type="submit"
-                      className="px-6 py-3 rounded-xl bg-[#1b2a4a] hover:bg-[#283d6b] text-white text-xs sm:text-sm font-bold cursor-pointer"
-                    >
-                      Save Address & Review Final Order →
-                    </button>
-                  </div>
-                </form>
+                  );
+                })}
               </div>
-            )}
+            </div>
+          )}
 
-            {/* STAGE 4: FINAL CONFIRMATION & WHATSAPP CONCIERGE DISPATCH */}
-            {stage === 4 && (
-              <div className="bg-white rounded-2xl p-5 sm:p-6 border border-[#e5dccb] space-y-5">
-                <h2 className="font-serif text-xl font-bold text-[#1b2a4a]">
-                  Stage 4: Confirm & Send to Snehal on WhatsApp
-                </h2>
+          {/* CONFIRMED ORDER VIEW */}
+          {confirmedOrder ? (
+            <div className="bg-surface-container-lowest rounded-3xl p-6 sm:p-10 border border-outline-variant/25 shadow-sm text-center space-y-5 max-w-2xl mx-auto">
+              <div className="w-16 h-16 rounded-full bg-tertiary-fixed text-on-tertiary-fixed mx-auto flex items-center justify-center">
+                <Icon name="check_circle" className="text-4xl" filled />
+              </div>
+              <Badge variant="secondaryContainer" className="mx-auto mb-0">
+                Order Reference #{confirmedOrder.orderNumber}
+              </Badge>
+              <h2 className="font-headline-lg text-2xl sm:text-3xl text-on-surface">
+                Thank You! Your Order Has Been Registered.
+              </h2>
+              <p className="text-body-md text-on-surface-variant max-w-xl mx-auto">
+                Click below to send your formatted order summary and GPS pin to{' '}
+                <strong>Aatmiya WhatsApp Concierge</strong>. Our team will call
+                you shortly to confirm your adult dress/kurta sizes or fresh
+                food batch and share the UPI payment request.
+              </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-2xl bg-[#faf7f2] border border-[#e5dccb] space-y-1.5 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-[#1b2a4a] uppercase tracking-wider">
-                        Verified Buyer & Delivery Address
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <a
+                  href={confirmedOrder.whatsappConciergeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-3.5 rounded-xl bg-[#25D366] hover:opacity-95 text-white font-label-lg text-label-lg shadow-md transition flex items-center gap-2"
+                >
+                  <Icon name="chat" className="text-xl" />
+                  <span>
+                    Send Order #{confirmedOrder.orderNumber} on WhatsApp
+                  </span>
+                </a>
+                <Link
+                  href="/orders"
+                  className="px-5 py-3.5 rounded-xl bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 font-label-md text-label-md text-on-surface flex items-center gap-1.5"
+                >
+                  <Icon name="receipt_long" className="text-lg text-primary" />
+                  <span>View My Orders</span>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              {/* Left 8 Columns: Active Checkout Stage */}
+              <div className="lg:col-span-8">
+                {/* STAGE 1: CART REVIEW */}
+                {stage === 1 && (
+                  <div className="bg-surface-container-lowest rounded-2xl p-5 sm:p-6 border border-outline-variant/25 shadow-[0_6px_20px_rgba(27,42,74,0.04)] space-y-5">
+                    <div className="flex items-center justify-between border-b border-outline-variant/25 pb-4">
+                      <div className="flex items-center gap-2.5">
+                        <Icon
+                          name="shopping_bag"
+                          className="text-primary text-2xl"
+                        />
+                        <h2 className="font-headline-md text-headline-md text-on-surface">
+                          Your Selected Curations
+                        </h2>
+                      </div>
+                      <span className="text-label-sm text-on-surface-variant">
+                        {cartItems.length}{' '}
+                        {cartItems.length === 1 ? 'item' : 'items'}
                       </span>
+                    </div>
+
+                    {cartItems.length === 0 ? (
+                      <div className="py-10 text-center space-y-4">
+                        <Icon
+                          name="shopping_bag"
+                          className="text-5xl text-outline block mx-auto"
+                        />
+                        <p className="text-body-md text-on-surface-variant">
+                          Your bag is currently empty.
+                        </p>
+                        <div className="flex flex-wrap justify-center gap-3">
+                          <Button
+                            type="button"
+                            onClick={handleLoadSampleItems}
+                            variant="primary"
+                          >
+                            <Icon name="auto_awesome" className="text-base" />
+                            <span>
+                              Load Sample Bag (1 Kids&apos; Snack + 1 Adult
+                              Cotton Dress)
+                            </span>
+                          </Button>
+                          <Link
+                            href="/products"
+                            className="px-4 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md border border-outline-variant/30"
+                          >
+                            Browse Catalog
+                          </Link>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="divide-y divide-outline-variant/20">
+                          {cartItems.map((item) => (
+                            <div
+                              key={item.variantId}
+                              className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                            >
+                              <div className="flex items-center gap-4">
+                                <img
+                                  src={item.imageUrl}
+                                  alt={item.productName}
+                                  className="w-16 h-16 rounded-xl object-cover border border-outline-variant/30 shrink-0"
+                                />
+                                <div>
+                                  <h4 className="font-headline-sm text-base text-on-surface">
+                                    {item.productName}
+                                  </h4>
+                                  <p className="text-body-sm text-on-surface-variant mt-0.5">
+                                    Option: <strong>{item.sizePack}</strong> • ₹
+                                    {item.unitPrice} each
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between sm:justify-end gap-3">
+                                <div className="flex items-center bg-surface-container-low rounded-lg p-0.5 border border-outline-variant/30">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      dispatch(
+                                        updateQuantity({
+                                          variantId: item.variantId,
+                                          quantity: item.quantity - 1,
+                                        }),
+                                      )
+                                    }
+                                    className="w-8 h-8 rounded-md hover:bg-surface-container text-primary flex items-center justify-center cursor-pointer"
+                                  >
+                                    <Icon name="remove" className="text-base" />
+                                  </button>
+                                  <span className="w-8 text-center font-mono font-bold text-sm">
+                                    {item.quantity}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      dispatch(
+                                        updateQuantity({
+                                          variantId: item.variantId,
+                                          quantity: item.quantity + 1,
+                                        }),
+                                      )
+                                    }
+                                    className="w-8 h-8 rounded-md hover:bg-surface-container text-primary flex items-center justify-center cursor-pointer"
+                                  >
+                                    <Icon name="add" className="text-base" />
+                                  </button>
+                                </div>
+
+                                <span className="font-headline-sm text-base font-mono font-bold text-on-surface w-16 text-right">
+                                  ₹{item.unitPrice * item.quantity}
+                                </span>
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    dispatch(removeFromCart(item.variantId))
+                                  }
+                                  className="p-1.5 text-error hover:bg-error-container/40 rounded-lg cursor-pointer"
+                                  title="Remove item"
+                                >
+                                  <Icon name="delete" className="text-lg" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="pt-2">
+                          <label className="block text-label-md font-label-md text-on-surface mb-1.5">
+                            Optional Family / Festive Gift Note
+                          </label>
+                          <input
+                            type="text"
+                            value={giftNote}
+                            onChange={(e) =>
+                              dispatch(setGiftNote(e.target.value))
+                            }
+                            placeholder="e.g., Warm Diwali wishes from our family to yours!"
+                            className="w-full px-4 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                        </div>
+
+                        <div className="pt-4 border-t border-outline-variant/25 flex justify-end">
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              if (!isAuthenticated) {
+                                setStage(2);
+                              } else if (!hasSavedAddress) {
+                                setStage(3);
+                              } else {
+                                setStage(4);
+                              }
+                            }}
+                            variant="primary"
+                            className="px-6 py-3 text-sm"
+                          >
+                            <span>
+                              {!isAuthenticated
+                                ? 'Continue to WhatsApp OTP Login'
+                                : !hasSavedAddress
+                                  ? 'Continue to GPS & Address'
+                                  : 'Proceed to Place Order (OTP & Address Verified)'}
+                            </span>
+                            <Icon name="arrow_forward" className="text-base" />
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* STAGE 2: WHATSAPP OTP VERIFICATION */}
+                {stage === 2 && (
+                  <div className="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 border border-outline-variant/25 shadow-[0_6px_20px_rgba(27,42,74,0.04)] space-y-5">
+                    <div className="flex items-start gap-3">
+                      <div className="w-11 h-11 rounded-xl bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center shrink-0">
+                        <Icon name="chat" className="text-2xl" />
+                      </div>
+                      <div>
+                        <span className="text-label-sm text-tertiary uppercase tracking-wider font-bold">
+                          Meta WhatsApp Cloud API Verification
+                        </span>
+                        <h2 className="font-headline-md text-headline-md text-on-surface mt-0.5">
+                          Verify Your WhatsApp Mobile Number
+                        </h2>
+                        <p className="text-body-sm text-on-surface-variant mt-1">
+                          We send a 4-digit OTP directly to your WhatsApp so our
+                          concierge can reach you for personal size &amp; batch
+                          confirmation.
+                        </p>
+                      </div>
+                    </div>
+
+                    {authError && (
+                      <div className="p-3.5 rounded-xl bg-error-container text-on-error-container text-body-sm font-medium flex items-center gap-2">
+                        <Icon name="error" className="text-lg" />
+                        <span>{authError}</span>
+                      </div>
+                    )}
+
+                    {!otpSent ? (
+                      <form
+                        onSubmit={handleSendWhatsAppOtp}
+                        className="space-y-4"
+                      >
+                        <div>
+                          <label className="block text-label-md font-label-md text-on-surface mb-1.5">
+                            Your Full Name
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={customerName}
+                            onChange={(e) => setCustomerName(e.target.value)}
+                            placeholder="e.g., Priya Kulkarni"
+                            className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-label-md font-label-md text-on-surface mb-1.5">
+                            10-Digit WhatsApp Mobile Number
+                          </label>
+                          <div className="flex items-center rounded-xl bg-surface-container-low border border-outline-variant/30 px-4 py-3">
+                            <span className="font-mono font-bold text-on-surface-variant pr-3 border-r border-outline-variant/40">
+                              +91
+                            </span>
+                            <input
+                              type="tel"
+                              required
+                              maxLength={10}
+                              value={phoneInput}
+                              onChange={(e) =>
+                                setPhoneInput(e.target.value.replace(/\D/g, ''))
+                              }
+                              placeholder="9876543210"
+                              className="w-full pl-3 bg-transparent font-mono text-base font-bold focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                        <Button
+                          type="submit"
+                          disabled={authLoading}
+                          variant="primary"
+                          className="w-full py-3.5 text-base"
+                        >
+                          <Icon name="send" className="text-lg" />
+                          <span>
+                            {authLoading
+                              ? 'Sending WhatsApp OTP...'
+                              : 'Send 4-Digit OTP on WhatsApp'}
+                          </span>
+                        </Button>
+                      </form>
+                    ) : (
+                      <form
+                        onSubmit={handleVerifyWhatsAppOtp}
+                        className="space-y-4"
+                      >
+                        <div className="p-3.5 rounded-xl bg-tertiary-fixed/60 border border-tertiary/20 text-body-sm text-on-tertiary-fixed flex flex-wrap items-center justify-between gap-2">
+                          <span>
+                            4-Digit OTP sent to WhatsApp{' '}
+                            <strong>+91 {phoneInput}</strong>
+                          </span>
+                          {devOtpHint && (
+                            <span className="px-2.5 py-0.5 rounded-md bg-surface-container-lowest text-primary font-mono font-bold text-xs">
+                              Dev OTP: {devOtpHint}
+                            </span>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-label-md font-label-md text-on-surface mb-1.5">
+                            Enter 4-Digit WhatsApp OTP
+                          </label>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={4}
+                            required
+                            value={otpCode}
+                            onChange={(e) =>
+                              setOtpCode(e.target.value.replace(/\D/g, ''))
+                            }
+                            placeholder="••••"
+                            className="w-full px-4 py-3.5 rounded-xl bg-surface-container-low border-2 border-primary text-center text-2xl font-mono font-bold tracking-[0.5em] focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setOtpSent(false)}
+                            className="px-4 py-3 rounded-xl border border-outline-variant/40 font-label-md text-label-md text-on-surface-variant cursor-pointer"
+                          >
+                            Change Number
+                          </button>
+                          <Button
+                            type="submit"
+                            disabled={authLoading}
+                            variant="primary"
+                            className="flex-1 py-3.5 text-base"
+                          >
+                            <Icon name="verified" className="text-lg" />
+                            <span>
+                              {authLoading
+                                ? 'Verifying...'
+                                : 'Verify OTP & Continue'}
+                            </span>
+                          </Button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                )}
+
+                {/* STAGE 3: GPS LOCATION & MOBILE ADDRESS CONFIRMATION */}
+                {stage === 3 && (
+                  <div className="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 border border-outline-variant/25 shadow-[0_6px_20px_rgba(27,42,74,0.04)] space-y-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-outline-variant/25 pb-4">
+                      <div>
+                        <span className="text-label-sm font-bold uppercase text-tertiary flex items-center gap-1">
+                          <Icon name="verified_user" className="text-sm" />
+                          <span>
+                            Verified WhatsApp: +91 {user.phone || phoneInput}
+                          </span>
+                        </span>
+                        <h2 className="font-headline-md text-headline-md text-on-surface mt-0.5">
+                          Delivery Address &amp; Exact GPS Pin
+                        </h2>
+                      </div>
+
                       <button
                         type="button"
-                        onClick={() => setStage(3)}
-                        className="text-xs font-bold text-[#6b2d26] hover:underline cursor-pointer"
+                        onClick={handleDetectGpsLocation}
+                        className="px-4 py-2.5 rounded-xl bg-tertiary text-on-tertiary font-label-md text-label-md shadow-xs cursor-pointer flex items-center gap-1.5 self-start hover:opacity-95"
                       >
-                        Edit Address / GPS
+                        <Icon name="my_location" className="text-lg" />
+                        <span>Detect My GPS Location</span>
                       </button>
                     </div>
-                    <p className="font-bold text-sm text-[#1c1917]">
-                      {customerName || user.name} (+91{' '}
-                      {user.phone || phoneInput} ✅)
-                    </p>
-                    <p className="text-[#57534e]">
-                      {flatOrHouse}, {areaOrSociety}, {city} - {pincode}
-                    </p>
-                    {landmark && (
-                      <p className="text-[#57534e]">Landmark: {landmark}</p>
+
+                    {gpsStatus && (
+                      <div className="p-3.5 rounded-xl bg-tertiary-fixed/60 border border-tertiary/25 text-body-sm text-on-tertiary-fixed flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-semibold flex items-center gap-1.5">
+                          <Icon name="check_circle" className="text-base" />
+                          <span>{gpsStatus}</span>
+                        </span>
+                        {googleMapsUrl && (
+                          <a
+                            href={googleMapsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline font-bold"
+                          >
+                            View Pin on Google Maps ↗
+                          </a>
+                        )}
+                      </div>
                     )}
-                    {googleMapsUrl && (
-                      <p>
-                        <a
-                          href={googleMapsUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[#234d36] font-bold underline"
+
+                    {addressError && (
+                      <div className="p-3.5 rounded-xl bg-error-container text-on-error-container text-body-sm font-medium">
+                        {addressError}
+                      </div>
+                    )}
+
+                    <form
+                      onSubmit={handleSaveAddressAndContinue}
+                      className="space-y-4"
+                    >
+                      {/* Housing Society Resident Toggle */}
+                      <label className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 flex items-center justify-between cursor-pointer">
+                        <div className="flex items-center gap-3">
+                          <Icon
+                            name="apartment"
+                            className="text-primary text-2xl"
+                          />
+                          <div>
+                            <div className="font-label-md text-label-md text-on-surface">
+                              Are you in our Housing Society / First Circle?
+                            </div>
+                            <div className="text-body-sm text-on-surface-variant">
+                              Enables FREE doorstep hand-delivery &amp;
+                              priority batch drop
+                            </div>
+                          </div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={isSocietyResident}
+                          onChange={(e) =>
+                            setIsSocietyResident(e.target.checked)
+                          }
+                          className="w-5 h-5 accent-primary cursor-pointer"
+                        />
+                      </label>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-label-sm font-bold text-on-surface mb-1">
+                            Recipient Full Name *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={customerName}
+                            onChange={(e) => setCustomerName(e.target.value)}
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-label-sm font-bold text-on-surface mb-1">
+                            Flat / Tower / House No. *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={flatOrHouse}
+                            onChange={(e) => setFlatOrHouse(e.target.value)}
+                            placeholder="e.g., Tower B - Flat 402"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-label-sm font-bold text-on-surface mb-1">
+                            Housing Society / Street / Area *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={areaOrSociety}
+                            onChange={(e) => setAreaOrSociety(e.target.value)}
+                            placeholder="e.g., Kalpataru Harmony Society, Wakad"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-label-sm font-bold text-on-surface mb-1">
+                            Landmark
+                          </label>
+                          <input
+                            type="text"
+                            value={landmark}
+                            onChange={(e) => setLandmark(e.target.value)}
+                            placeholder="e.g., Near Clubhouse Gate"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-label-sm font-bold text-on-surface mb-1">
+                            City *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={city}
+                            onChange={(e) => setCity(e.target.value)}
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-label-sm font-bold text-on-surface mb-1">
+                            6-Digit Pincode *
+                          </label>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={6}
+                            required
+                            value={pincode}
+                            onChange={(e) =>
+                              setPincode(e.target.value.replace(/\D/g, ''))
+                            }
+                            placeholder="411057"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 font-mono text-body-md"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Mobile Address Confirmation Card */}
+                      <div className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-label-md text-label-md text-on-surface flex items-center gap-1.5">
+                            <Icon
+                              name="smartphone"
+                              className="text-primary text-lg"
+                            />
+                            <span>Confirm Address &amp; GPS Pin from Mobile</span>
+                          </span>
+                          <Badge
+                            variant={
+                              isMobileConfirmed ? 'inStock' : 'sizePack'
+                            }
+                          >
+                            {isMobileConfirmed
+                              ? 'GPS & Mobile Confirmed'
+                              : 'Optional Mobile Link'}
+                          </Badge>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-4 pt-1">
+                          <label className="inline-flex items-center gap-2 text-body-sm font-medium text-on-surface cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={isMobileConfirmed}
+                              onChange={(e) =>
+                                setIsMobileConfirmed(e.target.checked)
+                              }
+                              className="w-4 h-4 accent-tertiary"
+                            />
+                            <span>
+                              I confirm this delivery address &amp; GPS pin
+                            </span>
+                          </label>
+
+                          <a
+                            href={`https://wa.me/91${(
+                              user.phone ||
+                              phoneInput ||
+                              ''
+                            )
+                              .replace(/\D/g, '')
+                              .slice(-10)}?text=${encodeURIComponent(
+                              `Tap this link on your mobile to confirm your GPS delivery pin for The House of Aatmiya: ${mobileConfirmDeepLink}`,
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-label-sm font-bold text-secondary underline"
+                          >
+                            Send Mobile GPS Confirm Link to My WhatsApp ↗
+                          </a>
+                        </div>
+                      </div>
+
+                      <div className="pt-3 flex justify-between items-center">
+                        <button
+                          type="button"
+                          onClick={() => setStage(1)}
+                          className="text-label-md text-on-surface-variant hover:underline cursor-pointer flex items-center gap-1"
                         >
-                          📍 GPS Pin Attached ({latitude}, {longitude})
-                        </a>
-                      </p>
+                          <Icon name="arrow_back" className="text-base" />
+                          <span>Back</span>
+                        </button>
+                        <Button
+                          type="submit"
+                          variant="primary"
+                          className="px-6 py-3"
+                        >
+                          <span>Save Address &amp; Review Order</span>
+                          <Icon name="arrow_forward" className="text-base" />
+                        </Button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {/* STAGE 4: FINAL CONFIRMATION & WHATSAPP CONCIERGE DISPATCH */}
+                {stage === 4 && (
+                  <div className="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 border border-outline-variant/25 shadow-[0_6px_20px_rgba(27,42,74,0.04)] space-y-5">
+                    <div className="flex items-center gap-2.5 border-b border-outline-variant/25 pb-4">
+                      <Icon
+                        name="verified"
+                        className="text-tertiary text-2xl"
+                        filled
+                      />
+                      <div>
+                        <h2 className="font-headline-md text-headline-md text-on-surface">
+                          Confirm &amp; Send Order on WhatsApp
+                        </h2>
+                        <p className="text-body-sm text-on-surface-variant">
+                          Your WhatsApp number and delivery address are verified
+                        </p>
+                      </div>
+                    </div>
+
+                    {orderError && (
+                      <div className="p-3.5 rounded-xl bg-error-container text-on-error-container text-body-sm font-medium flex items-center gap-2">
+                        <Icon name="error" className="text-lg" />
+                        <span>{orderError}</span>
+                      </div>
                     )}
-                  </div>
 
-                  <div className="p-4 rounded-2xl bg-[#f3ede2] border border-[#e5dccb] space-y-2 text-xs">
-                    <div className="font-bold text-[#1b2a4a] uppercase tracking-wider">
-                      Payment & Call Policy
-                    </div>
-                    <p className="text-[#57534e] leading-relaxed">
-                      • <strong>No COD:</strong> Once you place the order,
-                      Snehal will call you to confirm adult garment measurements
-                      and fresh food batch timing.
-                    </p>
-                    <p className="text-[#57534e] leading-relaxed">
-                      • <strong>UPI Advance on Call:</strong> 100% UPI advance
-                      for Fresh Foods/Hampers, or 50% booking advance for
-                      Cotton Clothing.
-                    </p>
-                  </div>
-                </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-1.5 text-body-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="font-label-sm font-bold text-primary uppercase tracking-wider">
+                            Verified Buyer &amp; Address
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setStage(3)}
+                            className="text-label-sm font-bold text-secondary hover:underline cursor-pointer"
+                          >
+                            Edit Address / GPS
+                          </button>
+                        </div>
+                        <p className="font-bold text-on-surface">
+                          {customerName || user.name} (+91{' '}
+                          {user.phone || phoneInput} ✓)
+                        </p>
+                        <p className="text-on-surface-variant">
+                          {flatOrHouse || address.flatOrHouse},{' '}
+                          {areaOrSociety || address.areaOrSociety},{' '}
+                          {city || address.city} - {pincode || address.pincode}
+                        </p>
+                        {googleMapsUrl && (
+                          <p>
+                            <a
+                              href={googleMapsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-tertiary font-bold underline inline-flex items-center gap-1"
+                            >
+                              <Icon name="my_location" className="text-sm" />
+                              <span>
+                                GPS Pin Attached ({latitude}, {longitude})
+                              </span>
+                            </a>
+                          </p>
+                        )}
+                      </div>
 
-                <div className="p-4 rounded-2xl bg-white border border-[#e5dccb] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-0.5">
-                    <div className="text-xs text-[#57534e]">
-                      Subtotal: ₹{subtotal} • Delivery:{' '}
-                      {shippingFee === 0 ? 'FREE' : `₹${shippingFee}`}
+                      <div className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-2 text-body-sm">
+                        <div className="font-label-sm font-bold text-primary uppercase tracking-wider">
+                          Personal Confirmation Call &amp; UPI
+                        </div>
+                        <p className="text-on-surface-variant">
+                          • <strong>No COD:</strong> Our concierge will call you
+                          to confirm adult garment measurements and fresh food
+                          batch timing.
+                        </p>
+                        <p className="text-on-surface-variant">
+                          • <strong>UPI on Call:</strong> 100% UPI advance for
+                          Fresh Foods/Hampers, or 50% booking advance for Cotton
+                          Clothing.
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-2xl font-bold text-[#1b2a4a]">
-                      Total Payable: ₹{totalPayable}
+
+                    <div className="pt-3 flex flex-wrap items-center justify-between gap-4 border-t border-outline-variant/25">
+                      <button
+                        type="button"
+                        onClick={() => setStage(1)}
+                        className="text-label-md text-on-surface-variant hover:underline cursor-pointer flex items-center gap-1"
+                      >
+                        <Icon name="arrow_back" className="text-base" />
+                        <span>Back to Bag</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={placingOrder}
+                        onClick={handlePlaceOrder}
+                        className="px-7 py-3.5 rounded-xl bg-tertiary hover:opacity-95 text-on-tertiary font-label-lg text-label-lg shadow-md cursor-pointer flex items-center gap-2"
+                      >
+                        <Icon name="chat" className="text-xl" />
+                        <span>
+                          {placingOrder
+                            ? 'Registering Order...'
+                            : 'Place Order & Open WhatsApp Concierge'}
+                        </span>
+                      </button>
                     </div>
                   </div>
-
-                  <button
-                    type="button"
-                    disabled={placingOrder}
-                    onClick={handlePlaceOrder}
-                    className="px-7 py-3.5 rounded-full bg-[#234d36] hover:bg-[#2e6647] text-white text-sm font-bold shadow-md cursor-pointer"
-                  >
-                    {placingOrder
-                      ? 'Registering Order...'
-                      : '✓ Place Order & Open WhatsApp to Snehal'}
-                  </button>
-                </div>
+                )}
               </div>
-            )}
-          </>
-        )}
+
+              {/* Right 4 Columns: Sticky Order Summary Sidebar */}
+              <div className="lg:col-span-4">
+                <aside className="bg-surface-container-lowest rounded-2xl p-5 sm:p-6 border border-outline-variant/25 shadow-[0_6px_20px_rgba(27,42,74,0.04)] sticky top-24 space-y-4">
+                  <h3 className="font-headline-sm text-headline-sm text-on-surface border-b border-outline-variant/25 pb-3">
+                    Order Summary
+                  </h3>
+
+                  <div className="space-y-2.5 text-body-sm">
+                    <div className="flex justify-between text-on-surface-variant">
+                      <span>Items Subtotal</span>
+                      <span className="font-mono font-semibold text-on-surface">
+                        ₹{subtotal}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-on-surface-variant">
+                      <span>
+                        {isSocietyResident
+                          ? 'Housing Society Hand-Delivery'
+                          : 'Standard Courier'}
+                      </span>
+                      <span className="font-mono font-semibold text-tertiary">
+                        {shippingFee === 0 ? 'FREE' : `₹${shippingFee}`}
+                      </span>
+                    </div>
+                    <div className="pt-3 border-t border-outline-variant/25 flex justify-between items-baseline">
+                      <span className="font-label-lg text-on-surface">
+                        Total Payable
+                      </span>
+                      <span className="font-headline-md text-2xl font-mono font-bold text-primary">
+                        ₹{totalPayable}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/25 text-body-sm text-on-surface-variant space-y-1.5">
+                    <div className="flex items-center gap-2 text-on-surface font-semibold">
+                      <Icon
+                        name="verified"
+                        className="text-primary text-lg"
+                        filled
+                      />
+                      <span>Crafted Like Family</span>
+                    </div>
+                    <p className="text-xs">
+                      Every order is personally reviewed before roasting or
+                      dispatch.
+                    </p>
+                  </div>
+                </aside>
+              </div>
+            </div>
+          )}
+        </div>
       </main>
 
       <Footer />
+      <BottomNav />
     </div>
   );
 };

@@ -1,10 +1,11 @@
-"use client";
+'use client';
 
 import React, { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Header, Footer } from '@/components';
-import { apiClient } from '@/services/api';
+import { Header, BottomNav, Footer } from '@/components';
+import { Button, Icon } from '@/elements';
+import { userAuthService } from '@/services';
 import { updateSavedAddress, useAppDispatch } from '@/store';
 
 export const MobileConfirmAddressView: React.FC = () => {
@@ -62,7 +63,9 @@ export const MobileConfirmAddressView: React.FC = () => {
         setStatusMsg(`Mobile GPS Pin Captured (${lat}, ${lng})!`);
       },
       () => {
-        setStatusMsg('Please allow Location Permission on your phone browser.');
+        setStatusMsg(
+          'Please allow Location Permission on your phone browser.',
+        );
       },
       { enableHighAccuracy: true, timeout: 10000 },
     );
@@ -90,7 +93,7 @@ export const MobileConfirmAddressView: React.FC = () => {
     );
 
     try {
-      await apiClient.post('/user-auth/confirm-address-mobile', {
+      await userAuthService.confirmAddressMobile({
         phone,
         flatOrHouse,
         areaOrSociety,
@@ -109,61 +112,65 @@ export const MobileConfirmAddressView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#faf7f2]">
+    <div className="min-h-screen flex flex-col bg-surface">
       <Header />
-      <main className="flex-1 max-w-lg w-full mx-auto px-4 py-8">
-        <div className="bg-white rounded-3xl p-6 border border-[#e5dccb] shadow-xs space-y-5">
+      <main className="flex-1 max-w-lg w-full mx-auto px-4 pt-24 pb-28">
+        <div className="bg-surface-container-lowest rounded-3xl p-6 border border-outline-variant/25 shadow-sm space-y-5">
           <div>
-            <span className="text-xs font-bold uppercase text-[#234d36]">
+            <span className="text-label-sm font-bold uppercase text-tertiary">
               Mobile GPS Address Confirmation
             </span>
-            <h1 className="font-serif text-2xl font-bold text-[#1b2a4a] mt-1">
-              Pin & Confirm Your Doorstep Location
+            <h1 className="font-headline-md text-2xl text-on-surface mt-1">
+              Pin &amp; Confirm Your Doorstep Location
             </h1>
-            <p className="text-xs text-[#57534e] mt-1">
+            <p className="text-body-sm text-on-surface-variant mt-1">
               Tap below on your mobile phone to capture your exact GPS location
-              and confirm your address for Snehal&apos;s delivery.
+              and confirm your address for doorstep delivery.
             </p>
           </div>
 
           <button
             type="button"
             onClick={handleCaptureMobileGps}
-            className="w-full py-3 rounded-xl bg-[#234d36] text-white text-xs font-bold shadow-xs cursor-pointer"
+            className="w-full py-3 rounded-xl bg-tertiary text-on-tertiary font-label-md text-label-md shadow-xs cursor-pointer flex items-center justify-center gap-2"
           >
-            📍 1-Tap Capture My Phone&apos;s Current GPS Pin
+            <Icon name="my_location" className="text-lg" />
+            <span>1-Tap Capture My Phone&apos;s Current GPS Pin</span>
           </button>
 
           {statusMsg && (
-            <div className="p-3 rounded-xl bg-[#234d36]/10 text-[#234d36] text-xs font-bold">
+            <div className="p-3 rounded-xl bg-tertiary-fixed/70 text-on-tertiary-fixed text-body-sm font-bold">
               {statusMsg}
             </div>
           )}
 
           {confirmed ? (
-            <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-3">
-              <div className="text-sm font-bold text-[#234d36]">
-                ✅ Mobile Address & GPS Pin Confirmed!
+            <div className="p-5 rounded-2xl bg-tertiary-fixed/50 border border-tertiary/30 text-center space-y-3">
+              <div className="font-headline-sm text-on-tertiary-fixed">
+                Mobile Address &amp; GPS Pin Confirmed!
               </div>
-              <p className="text-xs text-[#57534e]">
+              <p className="text-body-sm text-on-surface-variant">
                 Your GPS coordinates and address are locked in.
               </p>
-              <Link
-                href="/checkout"
-                className="inline-block px-5 py-2.5 rounded-full bg-[#1b2a4a] text-white text-xs font-bold"
-              >
-                Return to Checkout →
+              <Link href="/checkout" className="inline-block">
+                <Button type="button" variant="primary" className="px-5 py-2.5">
+                  <span>Return to Checkout</span>
+                  <Icon name="arrow_forward" className="text-sm" />
+                </Button>
               </Link>
             </div>
           ) : (
-            <form onSubmit={handleSubmitMobileConfirmation} className="space-y-3">
+            <form
+              onSubmit={handleSubmitMobileConfirmation}
+              className="space-y-3"
+            >
               <input
                 type="tel"
                 required
                 placeholder="Verified WhatsApp Phone (10 digits)"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#faf7f2] border border-[#e5dccb] text-xs font-semibold"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-sm font-semibold"
               />
               <input
                 type="text"
@@ -171,7 +178,7 @@ export const MobileConfirmAddressView: React.FC = () => {
                 placeholder="Flat / Tower / House No."
                 value={flatOrHouse}
                 onChange={(e) => setFlatOrHouse(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#faf7f2] border border-[#e5dccb] text-xs font-semibold"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-sm font-semibold"
               />
               <input
                 type="text"
@@ -179,7 +186,7 @@ export const MobileConfirmAddressView: React.FC = () => {
                 placeholder="Housing Society / Area"
                 value={areaOrSociety}
                 onChange={(e) => setAreaOrSociety(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#faf7f2] border border-[#e5dccb] text-xs font-semibold"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-sm font-semibold"
               />
               <div className="grid grid-cols-2 gap-3">
                 <input
@@ -188,7 +195,7 @@ export const MobileConfirmAddressView: React.FC = () => {
                   placeholder="City"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#faf7f2] border border-[#e5dccb] text-xs font-semibold"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-sm font-semibold"
                 />
                 <input
                   type="text"
@@ -199,7 +206,7 @@ export const MobileConfirmAddressView: React.FC = () => {
                   onChange={(e) =>
                     setPincode(e.target.value.replace(/\D/g, ''))
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#faf7f2] border border-[#e5dccb] text-xs font-semibold"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-sm font-semibold"
                 />
               </div>
               <input
@@ -207,28 +214,32 @@ export const MobileConfirmAddressView: React.FC = () => {
                 placeholder="Landmark (Optional)"
                 value={landmark}
                 onChange={(e) => setLandmark(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#faf7f2] border border-[#e5dccb] text-xs font-semibold"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-sm font-semibold"
               />
-              <label className="flex items-center gap-2 text-xs font-semibold text-[#1b2a4a]">
+              <label className="flex items-center gap-2 text-body-sm font-semibold text-on-surface">
                 <input
                   type="checkbox"
                   checked={isSocietyResident}
                   onChange={(e) => setIsSocietyResident(e.target.checked)}
+                  className="accent-primary"
                 />
                 <span>Housing Society Resident (Free Hand-Delivery)</span>
               </label>
 
-              <button
+              <Button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-[#1b2a4a] text-white text-xs font-bold cursor-pointer"
+                variant="primary"
+                className="w-full py-3 text-sm"
               >
-                ✓ Confirm Address & GPS Pin from Mobile
-              </button>
+                <Icon name="check_circle" className="text-lg" />
+                <span>Confirm Address &amp; GPS Pin from Mobile</span>
+              </Button>
             </form>
           )}
         </div>
       </main>
       <Footer />
+      <BottomNav />
     </div>
   );
 };

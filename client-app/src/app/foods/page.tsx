@@ -1,6 +1,6 @@
 import React from 'react';
-import { StorefrontModeView } from '@/features';
+import { HomeView } from '@/features';
 
 export default function FoodsModePage() {
-  return <StorefrontModeView forcedMode="FOODS_ONLY" />;
+  return <HomeView forcedMode="FOODS_ONLY" />;
 }

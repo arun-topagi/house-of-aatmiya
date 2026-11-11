@@ -1,175 +1,244 @@
-"use client";
+'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  StorefrontMode,
-  setStorefrontMode,
-  syncStoreSettings,
   useAppDispatch,
   useAppSelector,
+  setStorefrontMode,
+  StorefrontMode,
+  selectCartTotalItems,
 } from '@/store';
-import { fetchStoreSettings } from '@/services/api';
+import { Icon, Badge } from '@/elements';
 
-export const Header: React.FC = () => {
-  const pathname = usePathname();
-  const router = useRouter();
+export interface HeaderProps {
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+}
+
+const MODE_OPTIONS: {
+  id: StorefrontMode;
+  label: string;
+  shortLabel: string;
+  href: string;
+  icon: string;
+}[] = [
+  {
+    id: 'ALL',
+    label: 'All Curations',
+    shortLabel: 'All',
+    href: '/',
+    icon: 'auto_awesome',
+  },
+  {
+    id: 'DRESS_AND_GIFTS',
+    label: 'Dresses & Gifts',
+    shortLabel: 'Boutique',
+    href: '/boutique',
+    icon: 'checkroom',
+  },
+  {
+    id: 'FOODS_ONLY',
+    label: 'Pure Foods',
+    shortLabel: 'Foods',
+    href: '/foods',
+    icon: 'nutrition',
+  },
+];
+
+export const Header: React.FC<HeaderProps> = ({
+  searchQuery,
+  onSearchChange,
+}) => {
   const dispatch = useAppDispatch();
-
-  const { activeMode, allowModeSwitching, nextFoodBatchLabel } = useAppSelector(
-    (s) => s.app,
-  );
-  const cartItems = useAppSelector((s) => s.cart.items);
+  const router = useRouter();
+  const pathname = usePathname();
+  const { activeMode, allowModeSwitching } = useAppSelector((s) => s.app);
+  const totalCartItems = useAppSelector(selectCartTotalItems);
   const { isAuthenticated, user } = useAppSelector((s) => s.userAuth);
+  const [localSearch, setLocalSearch] = React.useState(searchQuery ?? '');
 
-  const totalBagCount = cartItems.reduce((sum, i) => sum + i.quantity, 0);
-
-  useEffect(() => {
-    fetchStoreSettings().then((settings) => {
-      if (settings) {
-        dispatch(syncStoreSettings(settings));
-      }
-    });
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (pathname === '/boutique') {
-      dispatch(setStorefrontMode('DRESS_AND_GIFTS'));
-    } else if (pathname === '/foods') {
-      dispatch(setStorefrontMode('FOODS_ONLY'));
-    } else if (pathname === '/') {
-      dispatch(setStorefrontMode('ALL'));
+  React.useEffect(() => {
+    if (searchQuery !== undefined) {
+      setLocalSearch(searchQuery);
     }
-  }, [pathname, dispatch]);
+  }, [searchQuery]);
 
-  const handleSelectMode = (mode: StorefrontMode, route: string) => {
+  const handleSearchInput = (value: string) => {
+    setLocalSearch(value);
+    if (onSearchChange) {
+      onSearchChange(value);
+    }
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!onSearchChange && localSearch.trim()) {
+      router.push(`/products?q=${encodeURIComponent(localSearch.trim())}`);
+    }
+  };
+
+  const handleModeSelect = (mode: StorefrontMode, href: string) => {
     dispatch(setStorefrontMode(mode));
-    router.push(route);
+    if (
+      pathname === '/checkout' ||
+      pathname === '/orders' ||
+      pathname === '/profile' ||
+      pathname?.startsWith('/products/')
+    ) {
+      router.push(href);
+    } else if (
+      pathname === '/' ||
+      pathname === '/boutique' ||
+      pathname === '/foods'
+    ) {
+      router.push(href);
+    }
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#faf7f2]/95 backdrop-blur-md border-b border-[#e5dccb]">
-      {/* Top announcement & Fresh Batch bar */}
-      <div className="bg-[#1b2a4a] text-[#faf7f2] text-xs py-2 px-4">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          <span className="font-medium tracking-wide">
-            ✦ Crafted like family by Arun & Snehal • Inspired by Saharsha & Sreeja
-          </span>
-          <span className="bg-white/15 px-2.5 py-0.5 rounded-full text-[11px] font-semibold">
-            🥣 {nextFoodBatchLabel}
-          </span>
-        </div>
-      </div>
-
-      {/* Main Brand Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        {/* Logo + Four-Dot Family Motif */}
-        <div className="flex items-center justify-between">
-          <Link href="/" className="group flex items-center gap-3">
-            {/* Four-Dot Motif for Family of Four */}
-            <div
-              className="grid grid-cols-2 gap-1 p-1.5 rounded-lg bg-[#1b2a4a]/5 border border-[#1b2a4a]/15"
-              title="Four-dot motif representing Arun, Snehal, Saharsha & Sreeja"
-            >
-              <span className="w-2 h-2 rounded-full bg-[#1b2a4a]" />
-              <span className="w-2 h-2 rounded-full bg-[#6b2d26]" />
-              <span className="w-2 h-2 rounded-full bg-[#234d36]" />
-              <span className="w-2 h-2 rounded-full bg-[#b8860b]" />
+    <header className="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-xl shadow-sm border-b border-outline-variant/25 transition-all">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex justify-between items-center h-16 sm:h-20 gap-3">
+        {/* Left: Brand Identity */}
+        <div className="flex items-center gap-3 shrink-0">
+          <Link
+            href="/"
+            onClick={() => dispatch(setStorefrontMode('ALL'))}
+            className="flex items-center gap-3 group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-primary flex flex-col items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+              <div className="grid grid-cols-2 gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FAF7F2]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#E5A93C]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#E07A5F]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#81B29A]" />
+              </div>
             </div>
             <div>
-              <span className="block text-[10px] uppercase tracking-[0.26em] text-[#6b2d26] font-semibold">
-                The House of
+              <span className="font-headline-md text-lg sm:text-xl font-bold text-primary tracking-tight block leading-none">
+                The House of Aatmiya
               </span>
-              <span className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-[#1b2a4a]">
-                Aatmiya
+              <span className="text-[10px] uppercase tracking-[0.18em] text-secondary font-semibold block mt-1">
+                Crafted Like Family
               </span>
             </div>
           </Link>
-
-          {/* Mobile Cart & Verified Phone Pill */}
-          <div className="flex md:hidden items-center gap-2">
-            <Link
-              href="/checkout"
-              className="relative inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#1b2a4a] text-white text-xs font-semibold shadow-xs"
-            >
-              <span>Bag ({totalBagCount})</span>
-            </Link>
-          </div>
         </div>
 
-        {/* 3-Mode Storefront Switcher */}
-        {allowModeSwitching && (
-          <nav
-            aria-label="Storefront Experience Modes"
-            className="flex items-center bg-[#f3ede2] p-1 rounded-full border border-[#e5dccb] self-start md:self-auto overflow-x-auto max-w-full"
-          >
-            <button
-              type="button"
-              onClick={() => handleSelectMode('ALL', '/')}
-              className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                activeMode === 'ALL' && pathname === '/'
-                  ? 'bg-[#1b2a4a] text-white shadow-xs'
-                  : 'text-[#57534e] hover:text-[#1b2a4a]'
-              }`}
+        {/* Center: 3-Mode Storefront Switcher Pills (Desktop) + Search */}
+        <div className="flex-1 max-w-2xl hidden md:flex items-center justify-center gap-3">
+          {allowModeSwitching && (
+            <nav
+              aria-label="Storefront Experience Modes"
+              className="flex items-center bg-surface-container-low p-1 rounded-full border border-outline-variant/30 shrink-0"
             >
-              1. All Categories
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSelectMode('DRESS_AND_GIFTS', '/boutique')}
-              className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                activeMode === 'DRESS_AND_GIFTS' || pathname === '/boutique'
-                  ? 'bg-[#6b2d26] text-white shadow-xs'
-                  : 'text-[#57534e] hover:text-[#6b2d26]'
-              }`}
-            >
-              2. Dresses & Gifts
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSelectMode('FOODS_ONLY', '/foods')}
-              className={`px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                activeMode === 'FOODS_ONLY' || pathname === '/foods'
-                  ? 'bg-[#234d36] text-white shadow-xs'
-                  : 'text-[#57534e] hover:text-[#234d36]'
-              }`}
-            >
-              3. Pure Foods Only
-            </button>
-          </nav>
-        )}
-
-        {/* Right Actions: Verified Status + Mobile Confirm Link + Checkout Bag */}
-        <div className="hidden md:flex items-center gap-3">
-          {isAuthenticated ? (
-            <div className="px-3 py-1.5 rounded-full bg-[#234d36]/10 border border-[#234d36]/25 text-[#234d36] text-xs font-semibold flex items-center gap-1.5">
-              <span>✅ +91 {user.phone}</span>
-            </div>
-          ) : (
-            <Link
-              href="/checkout"
-              className="text-xs font-semibold text-[#1b2a4a] hover:underline"
-            >
-              WhatsApp OTP Login
-            </Link>
+              {MODE_OPTIONS.map((m) => {
+                const isSelected = activeMode === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => handleModeSelect(m.id, m.href)}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                      isSelected
+                        ? m.id === 'FOODS_ONLY'
+                          ? 'bg-tertiary text-on-tertiary shadow-xs'
+                          : m.id === 'DRESS_AND_GIFTS'
+                            ? 'bg-secondary text-on-secondary shadow-xs'
+                            : 'bg-primary text-on-primary shadow-xs'
+                        : 'text-on-surface-variant hover:text-on-surface'
+                    }`}
+                  >
+                    <Icon name={m.icon} className="text-[16px]" />
+                    <span>{m.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
           )}
 
+          <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-xs">
+            <Icon
+              name="search"
+              className="text-on-surface-variant text-[18px] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            />
+            <input
+              type="text"
+              value={localSearch}
+              onChange={(e) => handleSearchInput(e.target.value)}
+              placeholder="Search cotton dresses, ragi cookies..."
+              className="w-full bg-surface-container-low hover:bg-surface-container focus:bg-surface-container-lowest text-on-surface placeholder:text-on-surface-variant/70 font-body-sm text-body-sm pl-10 pr-8 py-2 rounded-full border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+            />
+            {localSearch && (
+              <button
+                type="button"
+                onClick={() => handleSearchInput('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface cursor-pointer"
+                aria-label="Clear search"
+              >
+                <Icon name="close" className="text-sm" />
+              </button>
+            )}
+          </form>
+        </div>
+
+        {/* Right: Catalog Link + Cart + Profile */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <Link
-            href="/confirm-address"
-            className="px-3 py-1.5 rounded-full border border-[#e5dccb] bg-white text-[#1b2a4a] text-xs font-semibold hover:bg-[#f3ede2] transition"
+            href="/products"
+            className={`hidden lg:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-label-md font-label-md transition-colors ${
+              pathname === '/products'
+                ? 'bg-primary-fixed text-on-primary-fixed'
+                : 'bg-surface-container-low hover:bg-surface-container text-on-surface'
+            }`}
           >
-            📍 Confirm GPS Address
+            <Icon name="grid_view" className="text-[18px]" />
+            <span>Catalog</span>
           </Link>
 
           <Link
             href="/checkout"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1b2a4a] hover:bg-[#283d6b] text-white text-xs sm:text-sm font-semibold shadow-xs transition"
+            aria-label="Shopping Bag"
+            className="relative p-2.5 rounded-full bg-surface-container-low hover:bg-surface-container transition-colors flex items-center justify-center"
           >
-            <span>Concierge Bag</span>
-            <span className="px-2 py-0.5 rounded-full bg-white/20 text-xs">
-              {totalBagCount}
-            </span>
+            <Icon name="shopping_bag" className="text-primary" />
+            {totalCartItems > 0 && (
+              <Badge
+                variant="secondary"
+                className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px]"
+              >
+                {totalCartItems}
+              </Badge>
+            )}
+          </Link>
+
+          <Link
+            href="/profile"
+            aria-label={
+              isAuthenticated
+                ? `Profile (${user.name || user.phone})`
+                : 'Sign In / Profile'
+            }
+            title={
+              isAuthenticated
+                ? `${user.name || 'Verified Member'} (+91 ${user.phone})`
+                : 'WhatsApp OTP Login'
+            }
+            className={`relative p-2.5 rounded-full transition-colors flex items-center justify-center ${
+              isAuthenticated
+                ? 'bg-primary-fixed text-on-primary-fixed hover:bg-primary-fixed-dim'
+                : 'bg-surface-container-low hover:bg-surface-container text-primary'
+            }`}
+          >
+            <Icon
+              name={isAuthenticated ? 'verified_user' : 'person'}
+              className="text-primary"
+              filled={isAuthenticated}
+            />
+            {isAuthenticated && (
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 border-2 border-surface absolute bottom-0 right-0" />
+            )}
           </Link>
         </div>
       </div>

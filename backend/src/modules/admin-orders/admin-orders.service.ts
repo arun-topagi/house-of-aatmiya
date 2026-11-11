@@ -71,7 +71,7 @@ export class AdminOrdersService {
         `You can pay via any UPI app (GPay / PhonePe / Paytm) to *${upiVpa}* or tap:`,
         upiDeepLink,
         '',
-        `Once paid, please share the screenshot here so I can schedule your order in our batch! — Snehal`,
+        `Once paid, please share the screenshot here so I can schedule your order in our batch! — The House of Aatmiya`,
       ].join('\n');
 
       const whatsappUpiRequestUrl = `https://wa.me/91${customerPhone}?text=${encodeURIComponent(waPaymentRequestMessage)}`;
@@ -253,49 +253,6 @@ export class AdminOrdersService {
     }
 
     return Array.from(batchMap.values());
-  }
-
-  async getReorderRadar() {
-    const orders = await this.getOrders({});
-    const customerMap = new Map<
-      string,
-      {
-        customerName: string;
-        phone: string;
-        areaOrSociety: string;
-        lastOrderNumber: string;
-        lastOrderDate: Date;
-        itemsSummary: string[];
-        whatsappFollowUpUrl: string;
-      }
-    >();
-
-    for (const order of orders) {
-      const hasSnacks = order.items.some(
-        (i) => i.categorySlug === 'kids-snacks',
-      );
-      if (!hasSnacks) continue;
-
-      if (!customerMap.has(order.customer.phone)) {
-        const snackNames = order.items
-          .filter((i) => i.categorySlug === 'kids-snacks')
-          .map((i) => i.productName);
-
-        const msg = `Hi ${order.customer.name}! 🙏 Hope the family and kids enjoyed the *${snackNames.join(' & ')}* from *The House of Aatmiya*. I am preparing a fresh batch this week—would you like me to reserve a jar for you? — Snehal`;
-
-        customerMap.set(order.customer.phone, {
-          customerName: order.customer.name,
-          phone: order.customer.phone,
-          areaOrSociety: `${order.address.flatOrHouse}, ${order.address.areaOrSociety}`,
-          lastOrderNumber: order.orderNumber,
-          lastOrderDate: order.createdAt || new Date(),
-          itemsSummary: snackNames,
-          whatsappFollowUpUrl: `https://wa.me/91${order.customer.phone}?text=${encodeURIComponent(msg)}`,
-        });
-      }
-    }
-
-    return Array.from(customerMap.values());
   }
 
   async updateOrderStatusAndAdvance(

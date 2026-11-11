@@ -1,6 +1,6 @@
 import React from 'react';
-import { StorefrontModeView } from '@/features';
+import { HomeView } from '@/features';
 
 export default function BoutiqueModePage() {
-  return <StorefrontModeView forcedMode="DRESS_AND_GIFTS" />;
+  return <HomeView forcedMode="DRESS_AND_GIFTS" />;
 }

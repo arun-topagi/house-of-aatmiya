@@ -5,11 +5,17 @@ import {
   Param,
   Patch,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { AdminOrdersService } from './admin-orders.service';
 import { order_status } from '@prisma/client';
+import {
+  AdminGuard,
+  JwtAuthGuard,
+} from '../admin-auth/guards/jwt-auth.guard';
 
 @Controller('admin/orders')
+@UseGuards(JwtAuthGuard, AdminGuard)
 export class AdminOrdersController {
   constructor(private readonly adminOrdersService: AdminOrdersService) {}
 
@@ -29,11 +35,6 @@ export class AdminOrdersController {
   @Get('kitchen-prep')
   async getKitchenPrep() {
     return this.adminOrdersService.getKitchenPrepSummary();
-  }
-
-  @Get('reorder-radar')
-  async getReorderRadar() {
-    return this.adminOrdersService.getReorderRadar();
   }
 
   @Patch(':id/status')

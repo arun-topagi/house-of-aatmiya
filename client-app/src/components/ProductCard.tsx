@@ -1,32 +1,49 @@
-"use client";
+/* eslint-disable @next/next/no-img-element */
+'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
+import {
+  useAppDispatch,
+  useAppSelector,
+  addToCart,
+  updateQuantity,
+  removeFromCart,
+  selectCartItems,
+} from '@/store';
 import { CatalogProduct } from '@/services/api';
-import { addToCart, useAppDispatch } from '@/store';
+import { Badge, Button, Icon } from '@/elements';
 
-interface ProductCardProps {
+export interface ProductCardProps {
   product: CatalogProduct;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const dispatch = useAppDispatch();
+  const cartItems = useAppSelector(selectCartItems);
   const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
-  const [addedToast, setAddedToast] = useState(false);
 
   const activeVariant =
     product.variants[selectedVariantIdx] || product.variants[0];
+  const isAvailable = activeVariant
+    ? activeVariant.isAvailable &&
+      (activeVariant.isMadeToBatch || activeVariant.stockQty > 0)
+    : false;
 
-  const isFood = product.category?.slug === 'kids-snacks';
+  const cartItem = activeVariant
+    ? cartItems.find((item) => item.variantId === activeVariant.id)
+    : undefined;
+  const quantityInCart = cartItem?.quantity ?? 0;
 
-  const handleAdd = () => {
-    if (!activeVariant) return;
+  const handleAddFirst = () => {
+    if (!activeVariant || !isAvailable) return;
     dispatch(
       addToCart({
         productId: product.id,
         variantId: activeVariant.id,
         sku: product.sku,
         productName: product.name.en,
-        categorySlug: product.category?.slug || 'general',
+        categorySlug: product.category.slug,
         sizePack: activeVariant.sizePack,
         unitPrice: activeVariant.price,
         quantity: 1,
@@ -34,104 +51,149 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         isMadeToBatch: activeVariant.isMadeToBatch,
       }),
     );
-    setAddedToast(true);
-    setTimeout(() => setAddedToast(false), 1600);
+  };
+
+  const handleIncrement = () => {
+    if (!activeVariant) return;
+    dispatch(
+      updateQuantity({
+        variantId: activeVariant.id,
+        quantity: quantityInCart + 1,
+      }),
+    );
+  };
+
+  const handleDecrement = () => {
+    if (!activeVariant) return;
+    if (quantityInCart <= 1) {
+      dispatch(removeFromCart(activeVariant.id));
+    } else {
+      dispatch(
+        updateQuantity({
+          variantId: activeVariant.id,
+          quantity: quantityInCart - 1,
+        }),
+      );
+    }
   };
 
   return (
-    <div className="group bg-white rounded-2xl border border-[#e5dccb] overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+    <div className="bg-surface-container-lowest rounded-xl p-4 flex flex-col justify-between shadow-[0_6px_20px_rgba(27,42,74,0.05)] hover:shadow-[0_10px_28px_rgba(27,42,74,0.09)] transition-all duration-300 border border-outline-variant/25 group">
       <div>
-        {/* Product Image & Purity Badges */}
-        <div className="relative h-60 w-full bg-[#f3ede2] overflow-hidden">
-          <img
-            src={product.imageUrl}
-            alt={product.name.en}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-          {product.name.badge && (
-            <span
-              className={`absolute top-3 left-3 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase shadow-xs ${
-                isFood
-                  ? 'bg-[#234d36] text-white'
-                  : 'bg-[#6b2d26] text-white'
-              }`}
-            >
-              {product.name.badge}
-            </span>
-          )}
-          <span className="absolute bottom-2.5 right-2.5 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-full text-[11px] font-semibold text-[#1b2a4a]">
-            {isFood ? '🥣 Fresh Small-Batch' : '🌿 100% Pure Cotton'}
-          </span>
-        </div>
+        {/* Clickable Product Image + Title Area -> Opens Product Detail Page */}
+        <Link
+          href={`/products/${product.id}`}
+          className="block cursor-pointer focus:outline-none"
+        >
+          <div className="relative h-48 rounded-lg bg-surface-container-low mb-4 overflow-hidden flex items-center justify-center p-2">
+            <img
+              src={product.imageUrl}
+              alt={product.name.en}
+              className="h-full w-full object-cover rounded-md group-hover:scale-105 transition-transform duration-300"
+            />
 
-        {/* Content */}
-        <div className="p-4 sm:p-5">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-[#6b2d26] mb-1">
-            {product.category?.name?.en}
+            {/* Stock / Batch Badge */}
+            <div className="absolute top-2.5 left-2.5">
+              {isAvailable ? (
+                <Badge variant="inStock">
+                  <span className="w-1.5 h-1.5 rounded-full bg-tertiary" />
+                  {activeVariant?.isMadeToBatch
+                    ? 'Fresh Weekly Batch'
+                    : 'Ready Small Batch'}
+                </Badge>
+              ) : (
+                <Badge variant="outOfStock">Sold Out</Badge>
+              )}
+            </div>
+
+            {/* Size Pack Badge */}
+            {activeVariant && (
+              <div className="absolute top-2.5 right-2.5">
+                <Badge variant="sizePack">{activeVariant.sizePack}</Badge>
+              </div>
+            )}
           </div>
-          <h3 className="font-serif text-lg font-bold text-[#1b2a4a] leading-snug">
+
+          <span className="text-label-sm font-label-sm text-secondary uppercase tracking-wider block mb-1">
+            {product.category.name.en}
+          </span>
+
+          <h3 className="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors line-clamp-2 mb-1">
             {product.name.en}
           </h3>
-          {product.name.subtitle && (
-            <p className="text-xs font-semibold text-[#234d36] mt-1">
-              {product.name.subtitle}
-            </p>
-          )}
-          <p className="text-xs text-[#57534e] mt-2 line-clamp-2 leading-relaxed">
-            {product.description.en}
+
+          <p className="text-body-sm text-on-surface-variant line-clamp-2 mb-3">
+            {product.name.subtitle || product.description.en}
           </p>
+        </Link>
 
-          {product.usage?.en && (
-            <div className="mt-2.5 p-2 rounded-lg bg-[#faf7f2] border border-[#e5dccb]/70 text-[11px] text-[#57534e]">
-              {product.usage.en}
-            </div>
-          )}
-
-          {/* Size / Pack Selector */}
-          <div className="mt-3.5">
-            <label className="block text-[11px] font-semibold text-[#57534e] mb-1.5">
-              Select {isFood ? 'Pack Size' : 'Adult Size / Option'}:
-            </label>
-            <div className="flex flex-wrap gap-1.5">
-              {product.variants.map((v, idx) => (
-                <button
-                  key={v.id}
-                  type="button"
-                  onClick={() => setSelectedVariantIdx(idx)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition cursor-pointer ${
-                    idx === selectedVariantIdx
-                      ? 'bg-[#1b2a4a] text-white border-[#1b2a4a]'
-                      : 'bg-[#faf7f2] text-[#1c1917] border-[#e5dccb] hover:border-[#1b2a4a]'
-                  }`}
-                >
-                  {v.sizePack}
-                </button>
-              ))}
-            </div>
+        {/* Variant Switcher Pills */}
+        {product.variants.length > 1 && (
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {product.variants.map((v, idx) => (
+              <Button
+                key={v.id}
+                type="button"
+                onClick={() => setSelectedVariantIdx(idx)}
+                variant={
+                  idx === selectedVariantIdx
+                    ? 'variantActive'
+                    : 'variantInactive'
+                }
+              >
+                {v.sizePack}
+              </Button>
+            ))}
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Price & Add to Concierge Bag */}
-      <div className="px-4 sm:px-5 pb-4 pt-2 border-t border-[#f3ede2] flex items-center justify-between">
+      <div className="pt-3 border-t border-outline-variant/25 flex items-center justify-between gap-3 mt-1">
         <div>
-          <span className="text-xs text-[#57534e] block">Price</span>
-          <span className="text-xl font-bold text-[#1b2a4a]">
+          <span className="text-body-sm text-on-surface-variant block text-[11px]">
+            Price
+          </span>
+          <span className="font-headline-md text-headline-md text-on-surface font-mono font-bold">
             ₹{activeVariant?.price ?? 0}
           </span>
         </div>
 
-        <button
-          type="button"
-          onClick={handleAdd}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-            addedToast
-              ? 'bg-[#234d36] text-white'
-              : 'bg-[#1b2a4a] hover:bg-[#283d6b] text-white'
-          }`}
-        >
-          {addedToast ? '✓ Added to Bag' : '+ Add to Bag'}
-        </button>
+        <div className="flex items-center">
+          {quantityInCart === 0 ? (
+            <Button
+              type="button"
+              disabled={!isAvailable}
+              onClick={handleAddFirst}
+              variant={isAvailable ? 'primary' : 'disabled'}
+              className="px-4 py-2"
+            >
+              <Icon name="add_shopping_cart" className="text-[18px]" />
+              <span>Add to Bag</span>
+            </Button>
+          ) : (
+            <div className="flex items-center bg-primary text-on-primary rounded-xl p-0.5 shadow-sm">
+              <button
+                type="button"
+                onClick={handleDecrement}
+                aria-label="Decrease quantity"
+                className="w-8 h-8 rounded-lg hover:bg-primary-container flex items-center justify-center transition-colors cursor-pointer active:scale-95"
+              >
+                <Icon name="remove" className="text-[18px]" />
+              </button>
+              <span className="w-8 text-center font-headline-sm text-sm font-bold font-mono select-none">
+                {quantityInCart}
+              </span>
+              <button
+                type="button"
+                onClick={handleIncrement}
+                aria-label="Increase quantity"
+                className="w-8 h-8 rounded-lg hover:bg-primary-container flex items-center justify-center transition-colors cursor-pointer active:scale-95"
+              >
+                <Icon name="add" className="text-[18px]" />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

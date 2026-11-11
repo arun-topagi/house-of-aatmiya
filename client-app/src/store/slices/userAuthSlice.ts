@@ -15,7 +15,8 @@ export interface SavedUserAddress {
   isMobileConfirmed: boolean;
 }
 
-interface UserAuthState {
+export interface UserAuthState {
+  isHydrated: boolean;
   isAuthenticated: boolean;
   accessToken: string | null;
   refreshToken: string | null;
@@ -31,6 +32,7 @@ interface UserAuthState {
 const STORAGE_KEY = 'aatmiya_user_auth_v1';
 
 const defaultState: UserAuthState = {
+  isHydrated: false,
   isAuthenticated: false,
   accessToken: null,
   refreshToken: null,
@@ -55,27 +57,19 @@ const defaultState: UserAuthState = {
   },
 };
 
-function loadInitialState(): UserAuthState {
-  if (typeof window === 'undefined') return defaultState;
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaultState;
-    const parsed = JSON.parse(raw);
-    return {
-      ...defaultState,
-      ...parsed,
-      user: { ...defaultState.user, ...(parsed.user || {}) },
-      address: { ...defaultState.address, ...(parsed.address || {}) },
-    };
-  } catch {
-    return defaultState;
-  }
-}
-
 function persistState(state: UserAuthState) {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (state.accessToken) {
+      window.localStorage.setItem('aatmiya_user_token', state.accessToken);
+    }
+    if (state.refreshToken) {
+      window.localStorage.setItem(
+        'aatmiya_user_refresh_token',
+        state.refreshToken,
+      );
+    }
   } catch {
     // Ignore storage quota errors
   }
@@ -83,8 +77,44 @@ function persistState(state: UserAuthState) {
 
 const userAuthSlice = createSlice({
   name: 'userAuth',
-  initialState: loadInitialState(),
+  // Always start with defaultState so SSR and initial client hydration match 100%
+  initialState: defaultState,
   reducers: {
+    hydrateUserAuthFromStorage(state) {
+      state.isHydrated = true;
+      if (typeof window === 'undefined') return;
+      try {
+        const directToken = window.localStorage.getItem('aatmiya_user_token');
+        const directRefresh = window.localStorage.getItem(
+          'aatmiya_user_refresh_token',
+        );
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (!raw && !directToken && !directRefresh) return;
+        const parsed = raw ? JSON.parse(raw) : {};
+        const resolvedToken = directToken || parsed.accessToken || null;
+        const resolvedRefresh = directRefresh || parsed.refreshToken || null;
+        // Reject any stale fake local tokens
+        if (resolvedToken === 'local-verified-token') {
+          window.localStorage.removeItem(STORAGE_KEY);
+          window.localStorage.removeItem('aatmiya_user_token');
+          window.localStorage.removeItem('aatmiya_user_refresh_token');
+          return;
+        }
+        if (resolvedToken || resolvedRefresh) {
+          state.isAuthenticated = true;
+          state.accessToken = resolvedToken;
+          state.refreshToken = resolvedRefresh;
+        }
+        if (parsed.user) {
+          state.user = { ...defaultState.user, ...parsed.user };
+        }
+        if (parsed.address) {
+          state.address = { ...defaultState.address, ...parsed.address };
+        }
+      } catch {
+        // Ignore malformed storage
+      }
+    },
     setUserCredentials(
       state,
       action: PayloadAction<{
@@ -99,10 +129,32 @@ const userAuthSlice = createSlice({
         address?: Partial<SavedUserAddress> | null;
       }>,
     ) {
+      state.isHydrated = true;
       state.isAuthenticated = true;
       state.accessToken = action.payload.accessToken;
       state.refreshToken = action.payload.refreshToken;
       state.user = action.payload.user;
+      if (action.payload.address) {
+        state.address = {
+          ...state.address,
+          ...action.payload.address,
+        };
+      }
+      persistState(state);
+    },
+    syncUserProfile(
+      state,
+      action: PayloadAction<{
+        user?: Partial<UserAuthState['user']>;
+        address?: Partial<SavedUserAddress> | null;
+      }>,
+    ) {
+      if (action.payload.user) {
+        state.user = {
+          ...state.user,
+          ...action.payload.user,
+        };
+      }
       if (action.payload.address) {
         state.address = {
           ...state.address,
@@ -125,17 +177,31 @@ const userAuthSlice = createSlice({
       persistState(state);
     },
     logoutUser(state) {
+      state.isHydrated = true;
       state.isAuthenticated = false;
       state.accessToken = null;
       state.refreshToken = null;
       state.user = { id: '', phone: '', name: '', isPhoneVerified: false };
       if (typeof window !== 'undefined') {
         window.localStorage.removeItem(STORAGE_KEY);
+        window.localStorage.removeItem('aatmiya_user_token');
+        window.localStorage.removeItem('aatmiya_user_refresh_token');
       }
     },
   },
 });
 
-export const { setUserCredentials, updateSavedAddress, logoutUser } =
-  userAuthSlice.actions;
+export const {
+  hydrateUserAuthFromStorage,
+  setUserCredentials,
+  syncUserProfile,
+  updateSavedAddress,
+  logoutUser,
+} = userAuthSlice.actions;
+
+export const selectIsAuthHydrated = (state: { userAuth: UserAuthState }) =>
+  state.userAuth.isHydrated;
+export const selectIsUserAuthenticated = (state: { userAuth: UserAuthState }) =>
+  state.userAuth.isAuthenticated;
+
 export default userAuthSlice.reducer;

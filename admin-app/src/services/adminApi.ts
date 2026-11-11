@@ -1,14 +1,14 @@
-import axios from 'axios';
+import HttpFactory from '@/utils/httpFactory';
+import { authService } from './auth.service';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-export const adminApi = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+export const adminApi = new HttpFactory(API_BASE_URL);
+
+export async function loginAdminApi(email: string, password: string) {
+  return authService.login(email, password);
+}
 
 export type OrderStatus =
   | 'PENDING_CALL'

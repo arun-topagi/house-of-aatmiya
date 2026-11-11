@@ -31,6 +31,16 @@ export class RefreshTokenDto {
   refreshToken: string;
 }
 
+export class UpdateUserProfileDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  optInMarketing?: boolean;
+}
+
 export class UpsertAddressDto {
   @IsOptional()
   @IsString()

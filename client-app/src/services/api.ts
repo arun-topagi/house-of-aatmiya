@@ -1,15 +1,10 @@
-import axios from 'axios';
+import HttpFactory from '@/utils/httpFactory';
 import { StorefrontMode } from '@/store';
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-export const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+export const apiClient = new HttpFactory(API_BASE_URL);
 
 export interface CatalogVariant {
   id: string;
@@ -60,7 +55,7 @@ export const FALLBACK_CATEGORIES: CatalogCategory[] = [
       tagline: 'Ages 3+ • Zero Maida • Organic Jaggery • Pure Ghee',
     },
     description: {
-      en: 'Small-batch homemade foods made by Snehal the way we make them for Saharsha & Sreeja.',
+      en: 'Small-batch homemade foods prepared with sprouted ragi, organic jaggery, and pure cow ghee.',
     },
   },
   {
@@ -298,7 +293,7 @@ export const FALLBACK_PRODUCTS: CatalogProduct[] = [
       en: 'An heirloom-inspired maroon and off-white pure cotton dress for adult women with delicate kantha-stitch detailing on the yoke.',
     },
     usage: {
-      en: 'Fabric: 100% Pure Softened Mulmul Cotton. Fit confirmed personally by Snehal on your confirmation call.',
+      en: 'Fabric: 100% Pure Softened Mulmul Cotton. Fit confirmed on your confirmation call.',
     },
     images: [
       'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80',
@@ -405,7 +400,7 @@ export const FALLBACK_PRODUCTS: CatalogProduct[] = [
       badge: 'Hero Gift Box',
     },
     description: {
-      en: 'Our signature keepsake box bringing together 1 Handblock Pure Mulmul Cotton Stole, 1 Jar of Pure Ghee Ragi Cookies (200g), 1 Jar of Ghee-Roasted Makhana (100g), and a wax-sealed family note from Arun & Snehal.',
+      en: 'Our signature keepsake box bringing together 1 Handblock Pure Mulmul Cotton Stole, 1 Jar of Pure Ghee Ragi Cookies (200g), 1 Jar of Ghee-Roasted Makhana (100g), and a wax-sealed gift note.',
     },
     usage: {
       en: 'Available for individual festive gifting and bulk wedding/corporate orders (25–50+ boxes).',
@@ -426,7 +421,7 @@ export const FALLBACK_PRODUCTS: CatalogProduct[] = [
 export async function fetchStoreSettings() {
   try {
     const res = await apiClient.get('/store-settings');
-    return res.data?.data || res.data;
+    return res?.data || res;
   } catch {
     return {
       defaultMode: 'ALL' as StorefrontMode,
@@ -447,8 +442,8 @@ export async function fetchCatalogByMode(
       apiClient.get('/products', { params: { mode, categorySlug } }),
     ]);
 
-    const categories: CatalogCategory[] = catRes.data?.data || catRes.data;
-    const productsData = prodRes.data?.data || prodRes.data;
+    const categories: CatalogCategory[] = catRes?.data || catRes;
+    const productsData = prodRes?.data || prodRes;
     return {
       categories,
       products: (productsData?.items || []) as CatalogProduct[],
