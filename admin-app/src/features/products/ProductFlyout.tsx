@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { AdminProduct, StorefrontMode } from '@/services';
+import { AdminProduct, ProductType, StorefrontMode } from '@/services';
 
 export interface ProductFlyoutProps {
   isOpen: boolean;
@@ -12,6 +12,7 @@ export interface ProductFlyoutProps {
     payload: {
       id?: string;
       sku: string;
+      productType: ProductType;
       categorySlug: string;
       name: { en: string; subtitle?: string; badge?: string };
       description: { en: string };
@@ -84,6 +85,7 @@ export const ProductFlyout: React.FC<ProductFlyoutProps> = ({
 
   const [sku, setSku] = useState('');
   const [categorySlug, setCategorySlug] = useState('kids-snacks');
+  const [productType, setProductType] = useState<ProductType>('FOOD');
   const [titleEn, setTitleEn] = useState('');
   const [subtitleEn, setSubtitleEn] = useState('');
   const [badgeEn, setBadgeEn] = useState('');
@@ -122,8 +124,17 @@ export const ProductFlyout: React.FC<ProductFlyoutProps> = ({
     setNewImageUrl('');
 
     if (product) {
+      const slug = product.category?.slug || 'kids-snacks';
       setSku(product.sku || '');
-      setCategorySlug(product.category?.slug || 'kids-snacks');
+      setCategorySlug(slug);
+      setProductType(
+        product.productType ||
+          (slug === 'hampers'
+            ? 'GIFT_HAMPER'
+            : product.category?.modeGroup === 'DRESS_AND_GIFTS'
+              ? 'APPAREL'
+              : 'FOOD'),
+      );
       setTitleEn(extractField(product.name, 'en'));
       setSubtitleEn(extractField(product.name, 'subtitle'));
       setBadgeEn(extractField(product.name, 'badge'));
@@ -168,6 +179,7 @@ export const ProductFlyout: React.FC<ProductFlyoutProps> = ({
     } else {
       setSku(`HOA-${Math.floor(100 + Math.random() * 900)}`);
       setCategorySlug('kids-snacks');
+      setProductType('FOOD');
       setTitleEn('');
       setSubtitleEn('');
       setBadgeEn('');
@@ -241,6 +253,7 @@ export const ProductFlyout: React.FC<ProductFlyoutProps> = ({
         {
           id: product?.id,
           sku: sku.trim() || `HOA-${Math.floor(100 + Math.random() * 900)}`,
+          productType,
           categorySlug,
           name: {
             en: titleEn.trim(),
@@ -367,7 +380,19 @@ export const ProductFlyout: React.FC<ProductFlyoutProps> = ({
                 </label>
                 <select
                   value={categorySlug}
-                  onChange={(e) => setCategorySlug(e.target.value)}
+                  onChange={(e) => {
+                    const nextSlug = e.target.value;
+                    setCategorySlug(nextSlug);
+                    if (!product) {
+                      setProductType(
+                        nextSlug === 'hampers'
+                          ? 'GIFT_HAMPER'
+                          : nextSlug === 'kids-snacks'
+                            ? 'FOOD'
+                            : 'APPAREL',
+                      );
+                    }
+                  }}
                   className="w-full h-10 px-3 rounded bg-surface-container-lowest text-on-surface text-sm focus:outline-none focus:ring-1 focus:ring-primary border border-slate-200 cursor-pointer"
                 >
                   {CATEGORY_PRESETS.map((c) => (
@@ -377,6 +402,25 @@ export const ProductFlyout: React.FC<ProductFlyoutProps> = ({
                   ))}
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs text-on-surface-variant font-medium mb-1">
+                Product Type *
+              </label>
+              <select
+                value={productType}
+                onChange={(e) => setProductType(e.target.value as ProductType)}
+                className="w-full h-10 px-3 rounded bg-surface-container-lowest text-on-surface text-sm focus:outline-none focus:ring-1 focus:ring-primary border border-slate-200 cursor-pointer"
+              >
+                <option value="FOOD">Food &amp; Clean Snacks (FOOD)</option>
+                <option value="APPAREL">
+                  Apparel — Dresses, Kurtas &amp; Stoles (APPAREL)
+                </option>
+                <option value="GIFT_HAMPER">
+                  Gift Hamper (GIFT_HAMPER)
+                </option>
+              </select>
             </div>
 
             <div>

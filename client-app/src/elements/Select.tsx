@@ -20,7 +20,7 @@ export const Select: React.FC<SelectProps> = ({
   return (
     <div className={`relative ${wrapperClassName}`}>
       <select
-        className={`appearance-none bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md pl-3.5 pr-8 py-2 rounded-full border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer transition-colors ${className}`}
+        className={`appearance-none bg-[#11131c] hover:bg-[#171a26] text-on-surface font-label-md text-label-md pl-3.5 pr-8 py-2 rounded-full border border-white/[0.08] focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 cursor-pointer transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ${className}`}
         {...props}
       >
         {options.map((opt) => (

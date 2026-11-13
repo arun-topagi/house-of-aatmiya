@@ -25,14 +25,14 @@ export const BottomNav: React.FC = () => {
   const isProfileActive = pathname?.startsWith('/profile') ?? false;
 
   const baseTabStyle =
-    'flex flex-col items-center justify-center px-2.5 sm:px-4 py-1 text-on-surface-variant hover:text-primary transition-colors';
+    'flex flex-col items-center justify-center px-1.5 sm:px-4 py-1 text-on-surface-variant hover:text-on-surface transition-all';
   const activeTabStyle =
-    'flex flex-col items-center justify-center bg-primary-fixed text-on-primary-fixed rounded-xl px-2.5 sm:px-4 py-1 transition-all scale-95';
+    'flex flex-col items-center justify-center bg-primary/15 text-primary border border-primary/25 rounded-xl px-1.5 sm:px-4 py-1 transition-all shadow-[inset_0_1px_0_rgba(229,194,128,0.15)]';
 
   return (
     <nav
       aria-label="Primary Bottom Navigation"
-      className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 pb-safe h-16 bg-surface/95 backdrop-blur-lg shadow-[0_-4px_20px_rgba(27,42,74,0.06)] border-t border-outline-variant/25"
+      className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 pb-safe h-16 bg-[#090a0f]/90 backdrop-blur-2xl shadow-[0_-12px_32px_rgba(0,0,0,0.65)] border-t border-white/[0.08]"
     >
       <Link
         href="/"
@@ -40,7 +40,7 @@ export const BottomNav: React.FC = () => {
         className={isAllActive ? activeTabStyle : baseTabStyle}
       >
         <Icon name="home" filled={isAllActive} className="text-[22px]" />
-        <span className="font-label-sm text-[11px] font-semibold mt-0.5">
+        <span className="font-label-sm text-[9px] sm:text-[10px] tracking-tight sm:tracking-wide font-semibold mt-0.5 whitespace-nowrap">
           All
         </span>
       </Link>
@@ -55,7 +55,7 @@ export const BottomNav: React.FC = () => {
           filled={isBoutiqueActive}
           className="text-[22px]"
         />
-        <span className="font-label-sm text-[11px] font-semibold mt-0.5">
+        <span className="font-label-sm text-[9px] sm:text-[10px] tracking-tight sm:tracking-wide font-semibold mt-0.5 whitespace-nowrap">
           Boutique
         </span>
       </Link>
@@ -66,7 +66,7 @@ export const BottomNav: React.FC = () => {
         className={isFoodsActive ? activeTabStyle : baseTabStyle}
       >
         <Icon name="nutrition" filled={isFoodsActive} className="text-[22px]" />
-        <span className="font-label-sm text-[11px] font-semibold mt-0.5">
+        <span className="font-label-sm text-[9px] sm:text-[10px] tracking-tight sm:tracking-wide font-semibold mt-0.5 whitespace-nowrap">
           Pure Foods
         </span>
       </Link>
@@ -80,7 +80,7 @@ export const BottomNav: React.FC = () => {
           filled={isCatalogActive}
           className="text-[22px]"
         />
-        <span className="font-label-sm text-[11px] font-semibold mt-0.5">
+        <span className="font-label-sm text-[9px] sm:text-[10px] tracking-tight sm:tracking-wide font-semibold mt-0.5 whitespace-nowrap">
           Catalog
         </span>
       </Link>
@@ -95,7 +95,7 @@ export const BottomNav: React.FC = () => {
             filled={isOrdersActive}
             className="text-[22px]"
           />
-          <span className="font-label-sm text-[11px] font-semibold mt-0.5">
+          <span className="font-label-sm text-[9px] sm:text-[10px] tracking-tight sm:tracking-wide font-semibold mt-0.5 whitespace-nowrap">
             Orders
           </span>
         </Link>
@@ -106,7 +106,7 @@ export const BottomNav: React.FC = () => {
         className={isProfileActive ? activeTabStyle : baseTabStyle}
       >
         <Icon name="person" filled={isProfileActive} className="text-[22px]" />
-        <span className="font-label-sm text-[11px] font-semibold mt-0.5">
+        <span className="font-label-sm text-[9px] sm:text-[10px] tracking-tight sm:tracking-wide font-semibold mt-0.5 whitespace-nowrap">
           Profile
         </span>
       </Link>

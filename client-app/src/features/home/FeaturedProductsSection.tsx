@@ -19,13 +19,16 @@ export const FeaturedProductsSection: React.FC<
       id="catalog-section"
       className="py-6 px-4 sm:px-6 max-w-7xl mx-auto"
     >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
         <div>
+          <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.1em] sm:tracking-[0.2em] text-primary block mb-1 whitespace-nowrap">
+            Limited Small-Batch Drops
+          </span>
           <h2 className="font-headline-lg text-headline-lg text-on-surface">
             {selectedCategoryName || 'Signature Curations'}
           </h2>
-          <p className="text-body-md text-on-surface-variant">
-            Showing {products.length}{' '}
+          <p className="text-body-md text-on-surface-variant mt-0.5">
+            Showing <span className="font-mono text-on-surface">{products.length}</span>{' '}
             {products.length === 1 ? 'creation' : 'creations'} • Honest small-batch
             pricing
           </p>
@@ -33,7 +36,7 @@ export const FeaturedProductsSection: React.FC<
 
         <Link
           href="/products"
-          className="flex items-center gap-1.5 text-primary font-label-md text-label-md bg-primary-fixed/70 hover:bg-primary-fixed px-4 py-2.5 rounded-full transition-colors shrink-0 w-fit"
+          className="flex items-center gap-1.5 text-primary font-label-md text-label-md bg-white/[0.06] hover:bg-white/[0.11] border border-white/[0.1] px-4 py-2.5 rounded-full transition-all active:scale-[0.98] shrink-0 w-fit"
         >
           <span>Open Full Filterable Catalog</span>
           <Icon name="arrow_forward" className="text-base" />
@@ -41,7 +44,7 @@ export const FeaturedProductsSection: React.FC<
       </div>
 
       {products.length === 0 ? (
-        <div className="bg-surface-container-lowest rounded-2xl p-12 text-center border border-outline-variant/25">
+        <div className="cred-card rounded-2xl p-12 text-center">
           <Icon
             name="inventory_2"
             className="text-4xl text-outline mb-2 block"

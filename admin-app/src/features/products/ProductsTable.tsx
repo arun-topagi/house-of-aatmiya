@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { AdminProduct } from '@/services';
+import { AdminProduct, ProductType } from '@/services';
 import { Pagination } from '@/components/Pagination';
 
 export interface ProductsTableProps {
@@ -38,6 +38,35 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
     if (!product.category?.name) return 'Uncategorized';
     if (typeof product.category.name === 'string') return product.category.name;
     return product.category.name.en || 'Uncategorized';
+  };
+
+  const getProductTypeBadge = (
+    product: AdminProduct,
+  ): { label: string; badgeClass: string } => {
+    const resolvedType: ProductType =
+      product.productType ||
+      (product.category?.slug === 'hampers'
+        ? 'GIFT_HAMPER'
+        : product.category?.modeGroup === 'DRESS_AND_GIFTS'
+          ? 'APPAREL'
+          : 'FOOD');
+
+    if (resolvedType === 'APPAREL') {
+      return {
+        label: 'Apparel',
+        badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+      };
+    }
+    if (resolvedType === 'GIFT_HAMPER') {
+      return {
+        label: 'Gift Hamper',
+        badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
+      };
+    }
+    return {
+      label: 'Food',
+      badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    };
   };
 
   const getStockStatus = (
@@ -111,6 +140,12 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
                 scope="col"
                 className="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider"
               >
+                Product Type
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider"
+              >
                 Pack / Size Variants &amp; Margins
               </th>
               <th
@@ -144,7 +179,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
             {paginatedProducts.length === 0 ? (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={8}
                   className="px-6 py-12 text-center text-sm text-slate-500"
                 >
                   No products found matching your filters.
@@ -195,6 +230,19 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
                         {getCategoryName(product)}
                       </span>
+                    </td>
+
+                    <td className="px-6 py-4 align-middle">
+                      {(() => {
+                        const typeBadge = getProductTypeBadge(product);
+                        return (
+                          <span
+                            className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border ${typeBadge.badgeClass}`}
+                          >
+                            {typeBadge.label}
+                          </span>
+                        );
+                      })()}
                     </td>
 
                     <td className="px-6 py-4 align-middle">

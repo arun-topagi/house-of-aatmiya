@@ -82,7 +82,7 @@ export const OrdersView: React.FC = () => {
           </div>
 
           {!isAuthenticated ? (
-            <div className="bg-surface-container-lowest rounded-2xl p-10 text-center border border-outline-variant/25 shadow-sm">
+            <div className="cred-card rounded-3xl p-10 text-center">
               <Icon
                 name="lock"
                 className="text-5xl text-primary mb-3 block mx-auto"
@@ -102,13 +102,13 @@ export const OrdersView: React.FC = () => {
               </Link>
             </div>
           ) : loading ? (
-            <div className="bg-surface-container-lowest rounded-2xl p-10 text-center border border-outline-variant/25">
+            <div className="cred-card rounded-3xl p-10 text-center">
               <p className="text-body-md text-on-surface-variant">
                 Loading your orders for +91 {user.phone}...
               </p>
             </div>
           ) : orders.length === 0 ? (
-            <div className="bg-surface-container-lowest rounded-2xl p-10 text-center border border-outline-variant/25 shadow-sm">
+            <div className="cred-card rounded-3xl p-10 text-center">
               <Icon
                 name="receipt_long"
                 className="text-5xl text-outline mb-3 block mx-auto"
@@ -132,18 +132,18 @@ export const OrdersView: React.FC = () => {
               {orders.map((order) => (
                 <div
                   key={order.id}
-                  className="bg-surface-container-lowest rounded-2xl p-5 sm:p-6 border border-outline-variant/25 shadow-[0_6px_20px_rgba(27,42,74,0.04)]"
+                  className="cred-card rounded-2xl p-5 sm:p-6"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-outline-variant/25">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary-fixed text-on-primary-fixed flex items-center justify-center">
+                  <div className="flex items-center justify-between gap-2 sm:gap-3 pb-4 border-b border-white/[0.08]">
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/15 border border-primary/25 text-primary flex items-center justify-center shrink-0">
                         <Icon name="receipt_long" />
                       </div>
-                      <div>
-                        <span className="font-headline-sm text-base text-on-surface font-mono font-bold">
+                      <div className="min-w-0">
+                        <span className="font-mono text-sm sm:text-base text-on-surface font-bold whitespace-nowrap block">
                           {order.orderNumber}
                         </span>
-                        <span className="block text-body-sm text-on-surface-variant">
+                        <span className="block text-[11px] sm:text-body-sm text-on-surface-variant whitespace-nowrap">
                           {new Date(order.createdAt).toLocaleDateString(
                             'en-IN',
                             {
@@ -156,9 +156,9 @@ export const OrdersView: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                       <Badge variant="inStock">{order.status}</Badge>
-                      <span className="font-headline-md text-lg text-primary font-mono font-bold">
+                      <span className="font-mono text-base sm:text-lg text-primary font-bold whitespace-nowrap">
                         ₹{order.totalAmount}
                       </span>
                     </div>
@@ -187,7 +187,7 @@ export const OrdersView: React.FC = () => {
                     })}
                   </div>
 
-                  <div className="pt-3 border-t border-outline-variant/20 flex justify-end">
+                  <div className="pt-3 border-t border-white/[0.06] flex justify-end">
                     <a
                       href={`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(
                         `Namaste! Following up on my Order ${order.orderNumber}.`,

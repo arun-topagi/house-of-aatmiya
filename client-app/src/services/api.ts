@@ -6,6 +6,8 @@ const API_BASE_URL =
 
 export const apiClient = new HttpFactory(API_BASE_URL);
 
+export type ProductType = 'FOOD' | 'APPAREL' | 'GIFT_HAMPER';
+
 export interface CatalogVariant {
   id: string;
   sizePack: string;
@@ -18,6 +20,7 @@ export interface CatalogVariant {
 export interface CatalogProduct {
   id: string;
   sku: string;
+  productType?: ProductType;
   category: {
     id: string;
     slug: string;
@@ -35,6 +38,15 @@ export interface CatalogProduct {
   imageUrl: string;
   isFeatured: boolean;
   variants: CatalogVariant[];
+}
+
+export function isFoodProduct(
+  product: Pick<CatalogProduct, 'productType' | 'category'>,
+): boolean {
+  if (product.productType) {
+    return product.productType === 'FOOD';
+  }
+  return product.category?.modeGroup === 'FOODS_ONLY';
 }
 
 export interface CatalogCategory {

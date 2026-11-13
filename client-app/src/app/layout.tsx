@@ -1,14 +1,20 @@
 import type { Metadata, Viewport } from 'next';
-import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
-import { Playfair_Display } from 'next/font/google';
+import { Outfit, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import StoreProvider from '@/store/StoreProvider';
 
-const playfair = Playfair_Display({
+const credDisplay = Outfit({
   subsets: ['latin'],
-  weight: ['600', '700'],
-  variable: '--font-playfair',
+  weight: ['600', '700', '800'],
+  variable: '--font-cred-display',
+  display: 'swap',
+});
+
+const credSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-cred-sans',
   display: 'swap',
 });
 
@@ -32,7 +38,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${GeistSans.variable} ${GeistMono.variable} ${playfair.variable} h-full antialiased`}
+      className={`${credDisplay.variable} ${credSans.variable} ${GeistMono.variable} h-full antialiased dark`}
     >
       <head>
         <link

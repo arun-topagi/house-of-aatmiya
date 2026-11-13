@@ -125,19 +125,25 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick }) => {
     <section className="relative overflow-hidden pt-6 pb-8 md:py-10 px-4 sm:px-6 max-w-7xl mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         {/* Left 7 Columns: Editorial Headline */}
-        <div className="lg:col-span-7 z-10 flex flex-col justify-center bg-surface-container-lowest p-6 sm:p-10 rounded-2xl shadow-[0_8px_24px_rgba(27,42,74,0.05)] border border-outline-variant/25">
+        <div className="lg:col-span-7 relative overflow-hidden z-10 flex flex-col justify-center bg-[#11131c] p-6 sm:p-10 rounded-3xl border border-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.09),0_20px_50px_rgba(0,0,0,0.55)]">
+          {/* Subtle Ambient Radial Champagne Glow */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 rounded-full bg-[radial-gradient(circle,rgba(229,194,128,0.14)_0%,transparent_70%)]"
+          />
+
           <Badge variant="secondaryContainer">
-            <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
-            <span className="font-label-sm text-label-sm uppercase tracking-wider">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
+            <span className="font-mono text-[8.5px] sm:text-[10px] uppercase tracking-[0.08em] sm:tracking-[0.2em] font-semibold whitespace-nowrap">
               {content.pill}
             </span>
           </Badge>
 
-          <h1 className="font-display-lg text-3xl sm:text-4xl lg:text-[42px] text-on-surface mb-4 leading-[1.15]">
+          <h1 className="font-display-lg text-3xl sm:text-4xl lg:text-[44px] leading-[1.1] tracking-[-0.03em] bg-gradient-to-br from-white via-white to-white/65 bg-clip-text text-transparent mb-4">
             {content.title}
           </h1>
 
-          <p className="font-body-lg text-body-lg text-on-surface-variant mb-7 max-w-xl">
+          <p className="font-body-lg text-body-lg text-on-surface-variant mb-7 max-w-xl leading-relaxed">
             {content.subtitle}
           </p>
 
@@ -145,7 +151,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick }) => {
             <button
               type="button"
               onClick={onExploreClick}
-              className="bg-gradient-to-br from-primary to-primary-container text-on-primary font-label-lg text-label-lg px-6 py-3.5 rounded-xl shadow-md hover:opacity-95 transition-all flex items-center gap-2 cursor-pointer"
+              className="bg-gradient-to-b from-[#f0d399] to-[#cfa355] text-[#090a0f] font-label-lg text-label-lg font-bold px-6 py-3.5 rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_10px_28px_rgba(229,194,128,0.22)] hover:brightness-105 active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer"
             >
               <span>{content.ctaPrimary}</span>
               <Icon name="arrow_downward" className="text-base" />
@@ -153,22 +159,25 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick }) => {
 
             <Link
               href="/products"
-              className="bg-surface-container-low hover:bg-surface-container text-on-surface font-label-lg text-label-lg px-5 py-3.5 rounded-xl transition-all flex items-center gap-2 border border-outline-variant/30"
+              className="bg-[#171a26] hover:bg-[#1e2232] text-on-surface font-label-lg text-label-lg px-5 py-3.5 rounded-xl transition-all flex items-center gap-2 border border-white/[0.1] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] active:scale-[0.98]"
             >
               <Icon name="grid_view" className="text-primary text-lg" />
               <span>Full Catalog</span>
             </Link>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 mt-8 pt-6 border-t border-outline-variant/25">
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-4 mt-8 pt-6 border-t border-white/[0.08]">
             {content.stats.map((stat, idx) => (
-              <div key={idx}>
+              <div
+                key={idx}
+                className={idx > 0 ? 'pl-2.5 sm:pl-3 border-l border-white/[0.06]' : ''}
+              >
                 <p
-                  className={`font-headline-md text-xl ${stat.colorClass} font-bold`}
+                  className={`font-headline-md text-[13px] sm:text-xl ${stat.colorClass} font-bold tracking-tight whitespace-nowrap`}
                 >
                   {stat.value}
                 </p>
-                <p className="text-body-sm text-on-surface-variant">
+                <p className="text-[9.5px] sm:text-[11px] text-on-surface-variant mt-0.5 leading-snug">
                   {stat.label}
                 </p>
               </div>
@@ -177,24 +186,24 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onExploreClick }) => {
         </div>
 
         {/* Right 5 Columns: Showcase Image Card */}
-        <div className="lg:col-span-5 relative h-72 sm:h-96 lg:h-auto min-h-[320px] rounded-2xl overflow-hidden shadow-lg border border-outline-variant/25">
+        <div className="lg:col-span-5 relative h-72 sm:h-96 lg:h-auto min-h-[320px] rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-white/[0.09]">
           <img
             src={content.imageUrl}
             alt={content.overlayTitle}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent flex flex-col justify-end p-6">
-            <div className="bg-surface/95 backdrop-blur-md p-4 rounded-xl border border-outline-variant/25">
-              <div className="flex items-center justify-between mb-1">
+          <div className="absolute inset-0 bg-gradient-to-t from-[#090a0f]/95 via-[#090a0f]/35 to-transparent flex flex-col justify-end p-3 sm:p-6">
+            <div className="bg-[#090a0f]/85 backdrop-blur-2xl p-3 sm:p-4 rounded-2xl border border-white/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
+              <div className="flex items-center justify-between gap-1.5 sm:gap-2 mb-1.5">
                 <Badge variant="heroOverlay">{content.overlayBadge}</Badge>
-                <span className="text-label-sm text-secondary font-bold">
+                <span className="text-[8px] sm:text-[10px] font-mono uppercase tracking-[0.04em] sm:tracking-[0.16em] text-primary font-bold whitespace-nowrap">
                   Crafted Like Family
                 </span>
               </div>
-              <p className="font-headline-sm text-on-surface mt-1">
+              <p className="font-headline-sm text-[12.5px] sm:text-base text-on-surface mt-1 whitespace-nowrap">
                 {content.overlayTitle}
               </p>
-              <p className="text-body-sm text-on-surface-variant">
+              <p className="text-[10.5px] sm:text-body-sm text-on-surface-variant mt-0.5 leading-snug">
                 {content.overlaySub}
               </p>
             </div>

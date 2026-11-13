@@ -184,4 +184,27 @@
       );
     </sql>
   </changeSet>
+
+  <changeSet id="002-add-product-type" author="aatmiya">
+    <sql splitStatements="false">
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'product_type') THEN
+          CREATE TYPE product_type AS ENUM ('FOOD', 'APPAREL', 'GIFT_HAMPER');
+        END IF;
+      END$$;
+
+      ALTER TABLE "products"
+        ADD COLUMN IF NOT EXISTS "product_type" product_type NOT NULL DEFAULT 'FOOD';
+
+      UPDATE "products" p
+      SET "product_type" = CASE
+        WHEN c."slug" = 'hampers' THEN 'GIFT_HAMPER'::product_type
+        WHEN c."mode_group" = 'DRESS_AND_GIFTS' THEN 'APPAREL'::product_type
+        ELSE 'FOOD'::product_type
+      END
+      FROM "categories" c
+      WHERE p."category_id" = c."id";
+    </sql>
+  </changeSet>
 </databaseChangeLog>

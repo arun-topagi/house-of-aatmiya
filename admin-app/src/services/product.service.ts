@@ -3,6 +3,8 @@ import HttpFactory from '@/utils/httpFactory';
 import { axiosBaseQuery } from './axiosBaseQuery';
 import { StorefrontMode } from './adminApi';
 
+export type ProductType = 'FOOD' | 'APPAREL' | 'GIFT_HAMPER';
+
 export interface AdminProductVariant {
   id: string;
   sizePack: string;
@@ -19,6 +21,7 @@ export interface AdminProductVariant {
 export interface AdminProduct {
   id: string;
   sku: string;
+  productType?: ProductType;
   name: { en: string; subtitle?: string; badge?: string } | string;
   description?: { en: string } | string;
   usage?: { en: string } | string;

@@ -8,61 +8,66 @@ export const Footer: React.FC = () => {
   const { whatsappPhone } = useAppSelector((s) => s.app);
 
   return (
-    <footer className="bg-surface-container-low border-t border-outline-variant/30 pt-12 pb-28 mt-12">
+    <footer className="bg-[#07080c] border-t border-white/[0.08] pt-12 pb-28 mt-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-b from-[#1a1d2b] to-[#0e1018] border border-white/[0.12] flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
               <div className="grid grid-cols-2 gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#FAF7F2]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-[#E5A93C]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-[#E07A5F]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-[#81B29A]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#f5f5f7]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#e5c280]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#d96b78]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
               </div>
             </div>
             <div>
-              <span className="font-headline-md text-xl text-primary font-bold block leading-none">
+              <span className="font-headline-md text-lg sm:text-xl text-on-surface font-bold block leading-none whitespace-nowrap">
                 The House of Aatmiya
               </span>
-              <span className="text-[10px] uppercase tracking-[0.18em] text-secondary font-semibold block mt-1">
+              <span className="text-[8.5px] sm:text-[10px] font-mono uppercase tracking-[0.1em] sm:tracking-[0.22em] text-primary font-semibold block mt-1 whitespace-nowrap">
                 Crafted Like Family
               </span>
             </div>
           </div>
-          <p className="text-body-md text-on-surface-variant max-w-lg mb-4">
+          <p className="text-body-md text-on-surface-variant max-w-lg mb-5 leading-relaxed">
             Every jar of clean snacks is roasted fresh to weekly batch orders
             with organic jaggery and pure cow ghee, and every adult cotton
             garment is crafted from 100% pure breathable mulmul and cambric
             cotton.
           </p>
-          <div className="flex flex-wrap gap-2 text-label-sm">
-            <span className="px-3 py-1 rounded-full bg-surface-container-lowest border border-outline-variant/30 text-primary">
+          <div className="flex flex-wrap gap-2 text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.04em] sm:tracking-wider">
+            <span className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-[#11131c] border border-white/[0.08] text-primary whitespace-nowrap">
               Zero Maida • Zero Refined Sugar
             </span>
-            <span className="px-3 py-1 rounded-full bg-surface-container-lowest border border-outline-variant/30 text-secondary">
+            <span className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-[#11131c] border border-white/[0.08] text-secondary whitespace-nowrap">
               100% Pure Mulmul &amp; Cambric Cotton
             </span>
-            <span className="px-3 py-1 rounded-full bg-surface-container-lowest border border-outline-variant/30 text-tertiary">
+            <span className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-[#11131c] border border-white/[0.08] text-tertiary whitespace-nowrap">
               Free Housing Society Delivery
             </span>
           </div>
         </div>
 
-        <div>
-          <h4 className="font-label-lg text-label-lg text-on-surface mb-3">
-            Aatmiya WhatsApp Concierge
-          </h4>
-          <p className="text-body-sm text-on-surface-variant mb-4">
-            Have a question on adult cotton dress sizing (S–XL), custom festive
-            gift hampers, or this week&apos;s fresh snack batch?
-          </p>
+        <div className="cred-card rounded-2xl p-5 flex flex-col justify-between">
+          <div>
+            <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.1em] sm:tracking-[0.2em] text-primary block mb-1 whitespace-nowrap">
+              Direct Concierge
+            </span>
+            <h4 className="font-headline-sm text-on-surface mb-2">
+              Aatmiya WhatsApp Concierge
+            </h4>
+            <p className="text-body-sm text-on-surface-variant mb-4">
+              Have a question on adult cotton dress sizing (S–XL), custom festive
+              gift hampers, or this week&apos;s fresh snack batch?
+            </p>
+          </div>
           <a
             href={`https://wa.me/${whatsappPhone}?text=${encodeURIComponent(
               'Namaste! I am browsing The House of Aatmiya and would love your help.',
             )}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#25D366] text-white font-label-md text-label-md shadow-sm hover:opacity-95 transition-opacity"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#25D366]/15 border border-[#25D366]/35 text-[#4ade80] hover:bg-[#25D366]/25 font-label-md text-label-md transition-all active:scale-[0.98]"
           >
             <Icon name="chat" className="text-[18px]" />
             <span>Chat on WhatsApp</span>

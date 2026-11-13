@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { StorefrontMode } from '@prisma/client';
+import { ProductType, StorefrontMode } from '@prisma/client';
 
 export interface AdminVariantInput {
   id?: string;
@@ -14,6 +14,7 @@ export interface AdminVariantInput {
 
 export interface UpsertAdminProductDto {
   sku?: string;
+  productType?: ProductType;
   categorySlug?: string;
   categoryId?: string;
   name: Record<string, unknown> | string;
@@ -32,6 +33,7 @@ export class AdminProductsService {
   private formatProductRow(p: {
     id: string;
     sku: string;
+    productType?: ProductType;
     name: unknown;
     description: unknown;
     usage: unknown;
@@ -86,6 +88,7 @@ export class AdminProductsService {
     return {
       id: p.id,
       sku: p.sku,
+      productType: p.productType || 'FOOD',
       name: p.name,
       description: p.description,
       usage: p.usage,
@@ -120,14 +123,33 @@ export class AdminProductsService {
     return products.map((p) => this.formatProductRow(p));
   }
 
-  async createProduct(payload: UpsertAdminProductDto) {
-    let categoryId = payload.categoryId || null;
-    if (!categoryId && payload.categorySlug) {
-      const cat = await this.prisma.category.findUnique({
-        where: { slug: payload.categorySlug },
-      });
-      if (cat) categoryId = cat.id;
+  private inferProductType(
+    explicitType: ProductType | undefined,
+    category: { slug: string; modeGroup: StorefrontMode } | null,
+  ): ProductType {
+    if (explicitType) return explicitType;
+    if (category?.slug === 'hampers') return ProductType.GIFT_HAMPER;
+    if (category?.modeGroup === StorefrontMode.DRESS_AND_GIFTS) {
+      return ProductType.APPAREL;
     }
+    return ProductType.FOOD;
+  }
+
+  async createProduct(payload: UpsertAdminProductDto) {
+    let categoryRecord: { id: string; slug: string; modeGroup: StorefrontMode } | null = null;
+    if (payload.categoryId) {
+      categoryRecord = await this.prisma.category.findUnique({
+        where: { id: payload.categoryId },
+        select: { id: true, slug: true, modeGroup: true },
+      });
+    } else if (payload.categorySlug) {
+      categoryRecord = await this.prisma.category.findUnique({
+        where: { slug: payload.categorySlug },
+        select: { id: true, slug: true, modeGroup: true },
+      });
+    }
+    const categoryId = categoryRecord?.id || payload.categoryId || null;
+    const productType = this.inferProductType(payload.productType, categoryRecord);
 
     const sku =
       payload.sku?.trim() ||
@@ -154,6 +176,7 @@ export class AdminProductsService {
     const created = await this.prisma.product.create({
       data: {
         sku,
+        productType,
         categoryId,
         name: nameJson as object,
         description: descJson as object,
@@ -222,6 +245,7 @@ export class AdminProductsService {
       where: { id: productId },
       data: {
         ...(payload.sku ? { sku: payload.sku.trim() } : {}),
+        ...(payload.productType ? { productType: payload.productType } : {}),
         categoryId,
         name: nameJson as object,
         description: descJson as object,

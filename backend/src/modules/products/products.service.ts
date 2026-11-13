@@ -128,6 +128,7 @@ export class ProductsService {
     return {
       id: p.id,
       sku: p.sku,
+      productType: p.productType || 'FOOD',
       categoryId: p.categoryId,
       category: p.category
         ? {

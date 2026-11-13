@@ -271,13 +271,13 @@ export const ProfileView: React.FC = () => {
           </div>
 
           {!isAuthenticated ? (
-            <div className="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 border border-outline-variant/25 shadow-sm max-w-xl mx-auto space-y-5">
+            <div className="cred-card rounded-3xl p-6 sm:p-8 max-w-xl mx-auto space-y-5">
               <div className="flex items-start gap-3">
-                <div className="w-12 h-12 rounded-xl bg-primary text-on-primary flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-b from-[#f0d399] to-[#cfa355] text-[#090a0f] flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
                   <Icon name="chat" className="text-2xl" />
                 </div>
                 <div>
-                  <span className="text-label-sm font-bold uppercase text-secondary">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-primary">
                     Passwordless WhatsApp Login
                   </span>
                   <h2 className="font-headline-md text-on-surface mt-0.5">
@@ -291,7 +291,7 @@ export const ProfileView: React.FC = () => {
               </div>
 
               {authMessage && (
-                <div className="p-3.5 rounded-xl bg-error-container text-on-error-container text-body-sm font-medium">
+                <div className="p-3.5 rounded-xl bg-error-container border border-red-400/25 text-on-error-container text-body-sm font-medium">
                   {authMessage}
                 </div>
               )}
@@ -299,7 +299,7 @@ export const ProfileView: React.FC = () => {
               {!otpSent ? (
                 <form onSubmit={handleSendOtp} className="space-y-4">
                   <div>
-                    <label className="block text-label-md font-label-md text-on-surface mb-1">
+                    <label className="block text-[10px] font-mono uppercase tracking-[0.16em] text-on-surface-variant mb-1.5">
                       Your Name
                     </label>
                     <input
@@ -308,15 +308,15 @@ export const ProfileView: React.FC = () => {
                       value={nameInput}
                       onChange={(e) => setNameInput(e.target.value)}
                       placeholder="e.g., Priya Kulkarni"
-                      className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md"
+                      className="w-full px-4 py-3 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface placeholder:text-on-surface-variant/60 text-body-md focus:outline-none focus:border-primary/50"
                     />
                   </div>
                   <div>
-                    <label className="block text-label-md font-label-md text-on-surface mb-1">
+                    <label className="block text-[10px] font-mono uppercase tracking-[0.16em] text-on-surface-variant mb-1.5">
                       10-Digit WhatsApp Mobile Number
                     </label>
-                    <div className="flex items-center rounded-xl bg-surface-container-low border border-outline-variant/30 px-4 py-3">
-                      <span className="font-mono font-bold text-on-surface-variant pr-3 border-r border-outline-variant/40">
+                    <div className="flex items-center rounded-xl bg-[#090a0f] border border-white/[0.08] px-4 py-3 focus-within:border-primary/50">
+                      <span className="font-mono font-bold text-primary pr-3 border-r border-white/[0.08]">
                         +91
                       </span>
                       <input
@@ -328,7 +328,7 @@ export const ProfileView: React.FC = () => {
                           setPhoneInput(e.target.value.replace(/\D/g, ''))
                         }
                         placeholder="9876543210"
-                        className="w-full pl-3 bg-transparent font-mono text-base font-bold focus:outline-none"
+                        className="w-full pl-3 bg-transparent text-on-surface placeholder:text-on-surface-variant/50 font-mono text-base font-bold focus:outline-none"
                       />
                     </div>
                   </div>
@@ -348,12 +348,12 @@ export const ProfileView: React.FC = () => {
                 </form>
               ) : (
                 <form onSubmit={handleVerifyOtp} className="space-y-4">
-                  <div className="p-3.5 rounded-xl bg-tertiary-fixed/60 text-on-tertiary-fixed text-body-sm flex items-center justify-between">
+                  <div className="p-3.5 rounded-xl bg-tertiary-fixed/70 border border-tertiary/25 text-on-tertiary-fixed text-body-sm flex items-center justify-between">
                     <span>
                       OTP sent to WhatsApp <strong>+91 {phoneInput}</strong>
                     </span>
                     {devOtpHint && (
-                      <span className="px-2 py-0.5 rounded bg-surface-container-lowest text-primary font-mono font-bold text-xs">
+                      <span className="px-2 py-0.5 rounded bg-[#090a0f] border border-white/[0.1] text-primary font-mono font-bold text-xs">
                         Dev OTP: {devOtpHint}
                       </span>
                     )}
@@ -368,7 +368,7 @@ export const ProfileView: React.FC = () => {
                       setOtpCode(e.target.value.replace(/\D/g, ''))
                     }
                     placeholder="••••"
-                    className="w-full px-4 py-3.5 rounded-xl bg-surface-container-low border-2 border-primary text-center text-2xl font-mono font-bold tracking-[0.5em]"
+                    className="w-full px-4 py-3.5 rounded-xl bg-[#090a0f] border-2 border-primary text-on-surface text-center text-2xl font-mono font-bold tracking-[0.5em] focus:outline-none"
                   />
                   <Button
                     type="submit"
@@ -385,14 +385,14 @@ export const ProfileView: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* Left 4 Cols: Member Identity Card */}
-              <div className="lg:col-span-4 bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/25 shadow-sm space-y-4">
+              <div className="lg:col-span-4 cred-card rounded-3xl p-6 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-primary text-on-primary flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-b from-[#f0d399] to-[#cfa355] text-[#090a0f] flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
                     <Icon name="verified_user" className="text-2xl" filled />
                   </div>
                   <div>
                     <Badge variant="inStock">WhatsApp Verified</Badge>
-                    <h2 className="font-headline-sm text-lg text-on-surface mt-1">
+                    <h2 className="font-headline-sm text-lg text-on-surface mt-1.5">
                       {user.name || 'Aatmiya Member'}
                     </h2>
                     <p className="font-mono text-body-sm text-on-surface-variant">
@@ -401,10 +401,10 @@ export const ProfileView: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-outline-variant/25 space-y-2 text-body-sm">
+                <div className="pt-3 border-t border-white/[0.08] space-y-2 text-body-sm">
                   <Link
                     href="/orders"
-                    className="flex items-center justify-between p-3 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors"
+                    className="flex items-center justify-between p-3 rounded-xl bg-[#090a0f] border border-white/[0.06] hover:border-primary/35 transition-colors"
                   >
                     <span className="flex items-center gap-2 font-medium text-on-surface">
                       <Icon name="receipt_long" className="text-primary" />
@@ -414,7 +414,7 @@ export const ProfileView: React.FC = () => {
                   </Link>
                   <Link
                     href="/checkout"
-                    className="flex items-center justify-between p-3 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors"
+                    className="flex items-center justify-between p-3 rounded-xl bg-[#090a0f] border border-white/[0.06] hover:border-primary/35 transition-colors"
                   >
                     <span className="flex items-center gap-2 font-medium text-on-surface">
                       <Icon name="shopping_bag" className="text-secondary" />
@@ -426,8 +426,8 @@ export const ProfileView: React.FC = () => {
               </div>
 
               {/* Right 8 Cols: Saved GPS & Society Address Manager */}
-              <div className="lg:col-span-8 bg-surface-container-lowest rounded-2xl p-6 sm:p-8 border border-outline-variant/25 shadow-sm space-y-5">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/25 pb-4">
+              <div className="lg:col-span-8 cred-card rounded-3xl p-6 sm:p-8 space-y-5">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
                   <div>
                     <h3 className="font-headline-md text-on-surface">
                       Saved Delivery Address &amp; GPS Location
@@ -441,7 +441,7 @@ export const ProfileView: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleDetectGps}
-                    className="px-4 py-2 rounded-xl bg-tertiary text-on-tertiary font-label-md text-label-md flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-tertiary text-on-tertiary font-label-md text-label-md font-bold flex items-center gap-1.5 cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.3)] hover:brightness-105 active:scale-[0.98] transition-all"
                   >
                     <Icon name="my_location" className="text-lg" />
                     <span>Update GPS Pin</span>
@@ -449,7 +449,7 @@ export const ProfileView: React.FC = () => {
                 </div>
 
                 {saveBanner && (
-                  <div className="p-3.5 rounded-xl bg-tertiary-fixed/60 text-on-tertiary-fixed text-body-sm font-medium">
+                  <div className="p-3.5 rounded-xl bg-tertiary-fixed/70 border border-tertiary/25 text-on-tertiary-fixed text-body-sm font-medium">
                     {saveBanner}
                   </div>
                 )}
@@ -460,7 +460,7 @@ export const ProfileView: React.FC = () => {
                 >
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-label-sm font-bold text-on-surface mb-1">
+                      <label className="block text-[10px] font-mono uppercase tracking-[0.16em] text-on-surface-variant mb-1.5">
                         Full Name
                       </label>
                       <input
@@ -468,11 +468,11 @@ export const ProfileView: React.FC = () => {
                         required
                         value={nameInput || user.name}
                         onChange={(e) => setNameInput(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface text-body-md focus:outline-none focus:border-primary/50"
                       />
                     </div>
                     <div>
-                      <label className="block text-label-sm font-bold text-on-surface mb-1">
+                      <label className="block text-[10px] font-mono uppercase tracking-[0.16em] text-on-surface-variant mb-1.5">
                         Flat / Tower / House No.
                       </label>
                       <input
@@ -481,11 +481,11 @@ export const ProfileView: React.FC = () => {
                         value={flatOrHouse}
                         onChange={(e) => setFlatOrHouse(e.target.value)}
                         placeholder="Tower B - Flat 402"
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface placeholder:text-on-surface-variant/60 text-body-md focus:outline-none focus:border-primary/50"
                       />
                     </div>
                     <div>
-                      <label className="block text-label-sm font-bold text-on-surface mb-1">
+                      <label className="block text-[10px] font-mono uppercase tracking-[0.16em] text-on-surface-variant mb-1.5">
                         Housing Society / Area
                       </label>
                       <input
@@ -494,22 +494,22 @@ export const ProfileView: React.FC = () => {
                         value={areaOrSociety}
                         onChange={(e) => setAreaOrSociety(e.target.value)}
                         placeholder="Kalpataru Harmony Society"
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface placeholder:text-on-surface-variant/60 text-body-md focus:outline-none focus:border-primary/50"
                       />
                     </div>
                     <div>
-                      <label className="block text-label-sm font-bold text-on-surface mb-1">
+                      <label className="block text-[10px] font-mono uppercase tracking-[0.16em] text-on-surface-variant mb-1.5">
                         Landmark
                       </label>
                       <input
                         type="text"
                         value={landmark}
                         onChange={(e) => setLandmark(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface text-body-md focus:outline-none focus:border-primary/50"
                       />
                     </div>
                     <div>
-                      <label className="block text-label-sm font-bold text-on-surface mb-1">
+                      <label className="block text-[10px] font-mono uppercase tracking-[0.16em] text-on-surface-variant mb-1.5">
                         City
                       </label>
                       <input
@@ -517,11 +517,11 @@ export const ProfileView: React.FC = () => {
                         required
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface text-body-md focus:outline-none focus:border-primary/50"
                       />
                     </div>
                     <div>
-                      <label className="block text-label-sm font-bold text-on-surface mb-1">
+                      <label className="block text-[10px] font-mono uppercase tracking-[0.16em] text-on-surface-variant mb-1.5">
                         6-Digit Pincode
                       </label>
                       <input
@@ -532,7 +532,7 @@ export const ProfileView: React.FC = () => {
                         onChange={(e) =>
                           setPincode(e.target.value.replace(/\D/g, ''))
                         }
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 font-mono text-body-md"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface font-mono text-body-md focus:outline-none focus:border-primary/50"
                       />
                     </div>
                   </div>

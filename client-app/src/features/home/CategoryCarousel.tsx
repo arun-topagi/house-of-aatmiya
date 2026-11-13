@@ -27,6 +27,9 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
     <section className="py-4 px-4 sm:px-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-end mb-4">
         <div>
+          <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.1em] sm:tracking-[0.2em] text-primary block mb-1 whitespace-nowrap">
+            Curated Collections
+          </span>
           <h2 className="font-headline-md text-headline-md text-on-surface">
             Browse by Category
           </h2>
@@ -38,7 +41,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
           <button
             type="button"
             onClick={() => onSelectCategory(null)}
-            className="text-primary font-label-md text-label-md flex items-center gap-1 hover:underline cursor-pointer"
+            className="text-primary font-mono text-xs uppercase tracking-wider flex items-center gap-1 hover:underline cursor-pointer"
           >
             <span>Show All</span>
             <Icon name="close" className="text-sm" />
@@ -74,7 +77,7 @@ export const CategoryCarousel: React.FC<CategoryCarouselProps> = ({
               <Icon
                 name={iconName}
                 className={`text-xl ${
-                  isSelected ? 'text-primary-fixed' : 'text-primary'
+                  isSelected ? 'text-[#090a0f]' : 'text-primary'
                 }`}
               />
               <span>{cat.name.en}</span>

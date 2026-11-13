@@ -502,7 +502,7 @@ export const CheckoutView: React.FC = () => {
 
           {/* Dynamic Checkout Stepper */}
           {!confirmedOrder && (
-            <div className="w-full bg-surface-container-lowest rounded-2xl p-4 sm:p-5 mb-6 shadow-[0_6px_20px_rgba(27,42,74,0.04)] border border-outline-variant/25">
+            <div className="w-full cred-card rounded-2xl p-4 sm:p-5 mb-6">
               <div
                 className={`grid gap-2 ${
                   visibleSteps.length === 2
@@ -524,19 +524,19 @@ export const CheckoutView: React.FC = () => {
                       }}
                       className={`flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl transition-all text-left cursor-pointer ${
                         isActive
-                          ? 'bg-primary text-on-primary shadow-sm'
+                          ? 'bg-gradient-to-b from-[#f0d399] to-[#cfa355] text-[#090a0f] font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]'
                           : isCompleted
-                            ? 'bg-tertiary-fixed/70 text-on-tertiary-fixed hover:bg-tertiary-fixed'
-                            : 'bg-surface-container-low text-on-surface-variant'
+                            ? 'bg-tertiary-fixed/70 border border-tertiary/25 text-on-tertiary-fixed hover:bg-tertiary-fixed'
+                            : 'bg-[#090a0f] border border-white/[0.06] text-on-surface-variant'
                       }`}
                     >
                       <div
                         className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                           isActive
-                            ? 'bg-primary-container text-primary-fixed'
+                            ? 'bg-[#090a0f]/15 text-[#090a0f]'
                             : isCompleted
                               ? 'bg-tertiary text-on-tertiary'
-                              : 'bg-surface-container text-on-surface-variant'
+                              : 'bg-[#141722] text-on-surface-variant'
                         }`}
                       >
                         <Icon
@@ -545,10 +545,10 @@ export const CheckoutView: React.FC = () => {
                         />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[10px] font-bold uppercase tracking-wider block opacity-80">
+                        <span className="text-[8.5px] sm:text-[10px] font-mono font-bold uppercase tracking-[0.04em] sm:tracking-wider block opacity-80 whitespace-nowrap">
                           Step {idx + 1}
                         </span>
-                        <span className="font-label-md text-label-md truncate block">
+                        <span className="font-label-md text-[11px] sm:text-label-md whitespace-nowrap block">
                           {s.label}
                         </span>
                       </div>
@@ -561,8 +561,8 @@ export const CheckoutView: React.FC = () => {
 
           {/* CONFIRMED ORDER VIEW */}
           {confirmedOrder ? (
-            <div className="bg-surface-container-lowest rounded-3xl p-6 sm:p-10 border border-outline-variant/25 shadow-sm text-center space-y-5 max-w-2xl mx-auto">
-              <div className="w-16 h-16 rounded-full bg-tertiary-fixed text-on-tertiary-fixed mx-auto flex items-center justify-center">
+            <div className="cred-card rounded-3xl p-6 sm:p-10 text-center space-y-5 max-w-2xl mx-auto">
+              <div className="w-16 h-16 rounded-full bg-tertiary-fixed border border-tertiary/30 text-on-tertiary-fixed mx-auto flex items-center justify-center">
                 <Icon name="check_circle" className="text-4xl" filled />
               </div>
               <Badge variant="secondaryContainer" className="mx-auto mb-0">
@@ -583,7 +583,7 @@ export const CheckoutView: React.FC = () => {
                   href={confirmedOrder.whatsappConciergeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-6 py-3.5 rounded-xl bg-[#25D366] hover:opacity-95 text-white font-label-lg text-label-lg shadow-md transition flex items-center gap-2"
+                  className="px-6 py-3.5 rounded-xl bg-[#25D366]/15 border border-[#25D366]/35 hover:bg-[#25D366]/25 text-[#4ade80] font-label-lg text-label-lg transition-all active:scale-[0.98] flex items-center gap-2"
                 >
                   <Icon name="chat" className="text-xl" />
                   <span>
@@ -592,7 +592,7 @@ export const CheckoutView: React.FC = () => {
                 </a>
                 <Link
                   href="/orders"
-                  className="px-5 py-3.5 rounded-xl bg-surface-container-low hover:bg-surface-container border border-outline-variant/30 font-label-md text-label-md text-on-surface flex items-center gap-1.5"
+                  className="px-5 py-3.5 rounded-xl bg-[#090a0f] hover:bg-[#141722] border border-white/[0.1] font-label-md text-label-md text-on-surface flex items-center gap-1.5"
                 >
                   <Icon name="receipt_long" className="text-lg text-primary" />
                   <span>View My Orders</span>
@@ -605,8 +605,8 @@ export const CheckoutView: React.FC = () => {
               <div className="lg:col-span-8">
                 {/* STAGE 1: CART REVIEW */}
                 {stage === 1 && (
-                  <div className="bg-surface-container-lowest rounded-2xl p-5 sm:p-6 border border-outline-variant/25 shadow-[0_6px_20px_rgba(27,42,74,0.04)] space-y-5">
-                    <div className="flex items-center justify-between border-b border-outline-variant/25 pb-4">
+                  <div className="cred-card rounded-3xl p-5 sm:p-6 space-y-5">
+                    <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
                       <div className="flex items-center gap-2.5">
                         <Icon
                           name="shopping_bag"
@@ -653,7 +653,7 @@ export const CheckoutView: React.FC = () => {
                       </div>
                     ) : (
                       <>
-                        <div className="divide-y divide-outline-variant/20">
+                        <div className="divide-y divide-white/[0.08]">
                           {cartItems.map((item) => (
                             <div
                               key={item.variantId}
@@ -663,7 +663,7 @@ export const CheckoutView: React.FC = () => {
                                 <img
                                   src={item.imageUrl}
                                   alt={item.productName}
-                                  className="w-16 h-16 rounded-xl object-cover border border-outline-variant/30 shrink-0"
+                                  className="w-16 h-16 rounded-xl object-cover border border-white/[0.08] shrink-0"
                                 />
                                 <div>
                                   <h4 className="font-headline-sm text-base text-on-surface">
@@ -677,7 +677,7 @@ export const CheckoutView: React.FC = () => {
                               </div>
 
                               <div className="flex items-center justify-between sm:justify-end gap-3">
-                                <div className="flex items-center bg-surface-container-low rounded-lg p-0.5 border border-outline-variant/30">
+                                <div className="flex items-center bg-[#090a0f] rounded-lg p-0.5 border border-white/[0.08]">
                                   <button
                                     type="button"
                                     onClick={() =>
@@ -688,7 +688,7 @@ export const CheckoutView: React.FC = () => {
                                         }),
                                       )
                                     }
-                                    className="w-8 h-8 rounded-md hover:bg-surface-container text-primary flex items-center justify-center cursor-pointer"
+                                    className="w-8 h-8 rounded-md hover:bg-primary/15 text-primary flex items-center justify-center cursor-pointer"
                                   >
                                     <Icon name="remove" className="text-base" />
                                   </button>
@@ -705,7 +705,7 @@ export const CheckoutView: React.FC = () => {
                                         }),
                                       )
                                     }
-                                    className="w-8 h-8 rounded-md hover:bg-surface-container text-primary flex items-center justify-center cursor-pointer"
+                                    className="w-8 h-8 rounded-md hover:bg-primary/15 text-primary flex items-center justify-center cursor-pointer"
                                   >
                                     <Icon name="add" className="text-base" />
                                   </button>
@@ -731,7 +731,7 @@ export const CheckoutView: React.FC = () => {
                         </div>
 
                         <div className="pt-2">
-                          <label className="block text-label-md font-label-md text-on-surface mb-1.5">
+                          <label className="block text-[10px] font-mono uppercase tracking-[0.16em] text-on-surface-variant mb-1.5">
                             Optional Family / Festive Gift Note
                           </label>
                           <input
@@ -741,11 +741,11 @@ export const CheckoutView: React.FC = () => {
                               dispatch(setGiftNote(e.target.value))
                             }
                             placeholder="e.g., Warm Diwali wishes from our family to yours!"
-                            className="w-full px-4 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full px-4 py-2.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface placeholder:text-on-surface-variant/60 text-body-md focus:outline-none focus:border-primary/50"
                           />
                         </div>
 
-                        <div className="pt-4 border-t border-outline-variant/25 flex justify-end">
+                        <div className="pt-4 border-t border-white/[0.08] flex justify-end">
                           <Button
                             type="button"
                             onClick={() => {
@@ -777,13 +777,13 @@ export const CheckoutView: React.FC = () => {
 
                 {/* STAGE 2: WHATSAPP OTP VERIFICATION */}
                 {stage === 2 && (
-                  <div className="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 border border-outline-variant/25 shadow-[0_6px_20px_rgba(27,42,74,0.04)] space-y-5">
+                  <div className="cred-card rounded-3xl p-6 sm:p-8 space-y-5">
                     <div className="flex items-start gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center shrink-0">
+                      <div className="w-11 h-11 rounded-xl bg-tertiary-fixed border border-tertiary/25 text-on-tertiary-fixed flex items-center justify-center shrink-0">
                         <Icon name="chat" className="text-2xl" />
                       </div>
                       <div>
-                        <span className="text-label-sm text-tertiary uppercase tracking-wider font-bold">
+                        <span className="text-[10px] font-mono text-tertiary uppercase tracking-[0.18em] font-bold">
                           Meta WhatsApp Cloud API Verification
                         </span>
                         <h2 className="font-headline-md text-headline-md text-on-surface mt-0.5">
@@ -798,7 +798,7 @@ export const CheckoutView: React.FC = () => {
                     </div>
 
                     {authError && (
-                      <div className="p-3.5 rounded-xl bg-error-container text-on-error-container text-body-sm font-medium flex items-center gap-2">
+                      <div className="p-3.5 rounded-xl bg-error-container border border-red-400/25 text-on-error-container text-body-sm font-medium flex items-center gap-2">
                         <Icon name="error" className="text-lg" />
                         <span>{authError}</span>
                       </div>
@@ -810,7 +810,7 @@ export const CheckoutView: React.FC = () => {
                         className="space-y-4"
                       >
                         <div>
-                          <label className="block text-label-md font-label-md text-on-surface mb-1.5">
+                          <label className="block text-[10px] font-mono uppercase tracking-[0.16em] text-on-surface-variant mb-1.5">
                             Your Full Name
                           </label>
                           <input
@@ -819,15 +819,15 @@ export const CheckoutView: React.FC = () => {
                             value={customerName}
                             onChange={(e) => setCustomerName(e.target.value)}
                             placeholder="e.g., Priya Kulkarni"
-                            className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md focus:outline-none focus:ring-2 focus:ring-primary"
+                            className="w-full px-4 py-3 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface placeholder:text-on-surface-variant/60 text-body-md focus:outline-none focus:border-primary/50"
                           />
                         </div>
                         <div>
-                          <label className="block text-label-md font-label-md text-on-surface mb-1.5">
+                          <label className="block text-[10px] font-mono uppercase tracking-[0.16em] text-on-surface-variant mb-1.5">
                             10-Digit WhatsApp Mobile Number
                           </label>
-                          <div className="flex items-center rounded-xl bg-surface-container-low border border-outline-variant/30 px-4 py-3">
-                            <span className="font-mono font-bold text-on-surface-variant pr-3 border-r border-outline-variant/40">
+                          <div className="flex items-center rounded-xl bg-[#090a0f] border border-white/[0.08] px-4 py-3 focus-within:border-primary/50">
+                            <span className="font-mono font-bold text-primary pr-3 border-r border-white/[0.08]">
                               +91
                             </span>
                             <input
@@ -839,7 +839,7 @@ export const CheckoutView: React.FC = () => {
                                 setPhoneInput(e.target.value.replace(/\D/g, ''))
                               }
                               placeholder="9876543210"
-                              className="w-full pl-3 bg-transparent font-mono text-base font-bold focus:outline-none"
+                              className="w-full pl-3 bg-transparent text-on-surface placeholder:text-on-surface-variant/50 font-mono text-base font-bold focus:outline-none"
                             />
                           </div>
                         </div>
@@ -862,20 +862,20 @@ export const CheckoutView: React.FC = () => {
                         onSubmit={handleVerifyWhatsAppOtp}
                         className="space-y-4"
                       >
-                        <div className="p-3.5 rounded-xl bg-tertiary-fixed/60 border border-tertiary/20 text-body-sm text-on-tertiary-fixed flex flex-wrap items-center justify-between gap-2">
+                        <div className="p-3.5 rounded-xl bg-tertiary-fixed/70 border border-tertiary/25 text-body-sm text-on-tertiary-fixed flex flex-wrap items-center justify-between gap-2">
                           <span>
                             4-Digit OTP sent to WhatsApp{' '}
                             <strong>+91 {phoneInput}</strong>
                           </span>
                           {devOtpHint && (
-                            <span className="px-2.5 py-0.5 rounded-md bg-surface-container-lowest text-primary font-mono font-bold text-xs">
+                            <span className="px-2.5 py-0.5 rounded-md bg-[#090a0f] border border-white/[0.1] text-primary font-mono font-bold text-xs">
                               Dev OTP: {devOtpHint}
                             </span>
                           )}
                         </div>
 
                         <div>
-                          <label className="block text-label-md font-label-md text-on-surface mb-1.5">
+                          <label className="block text-[10px] font-mono uppercase tracking-[0.16em] text-on-surface-variant mb-1.5">
                             Enter 4-Digit WhatsApp OTP
                           </label>
                           <input
@@ -888,7 +888,7 @@ export const CheckoutView: React.FC = () => {
                               setOtpCode(e.target.value.replace(/\D/g, ''))
                             }
                             placeholder="••••"
-                            className="w-full px-4 py-3.5 rounded-xl bg-surface-container-low border-2 border-primary text-center text-2xl font-mono font-bold tracking-[0.5em] focus:outline-none"
+                            className="w-full px-4 py-3.5 rounded-xl bg-[#090a0f] border-2 border-primary text-on-surface text-center text-2xl font-mono font-bold tracking-[0.5em] focus:outline-none"
                           />
                         </div>
 
@@ -896,7 +896,7 @@ export const CheckoutView: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => setOtpSent(false)}
-                            className="px-4 py-3 rounded-xl border border-outline-variant/40 font-label-md text-label-md text-on-surface-variant cursor-pointer"
+                            className="px-4 py-3 rounded-xl bg-[#090a0f] border border-white/[0.1] font-label-md text-label-md text-on-surface-variant hover:text-on-surface cursor-pointer"
                           >
                             Change Number
                           </button>
@@ -921,10 +921,10 @@ export const CheckoutView: React.FC = () => {
 
                 {/* STAGE 3: GPS LOCATION & MOBILE ADDRESS CONFIRMATION */}
                 {stage === 3 && (
-                  <div className="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 border border-outline-variant/25 shadow-[0_6px_20px_rgba(27,42,74,0.04)] space-y-5">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-outline-variant/25 pb-4">
+                  <div className="cred-card rounded-3xl p-6 sm:p-8 space-y-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
                       <div>
-                        <span className="text-label-sm font-bold uppercase text-tertiary flex items-center gap-1">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] text-tertiary flex items-center gap-1">
                           <Icon name="verified_user" className="text-sm" />
                           <span>
                             Verified WhatsApp: +91 {user.phone || phoneInput}
@@ -938,7 +938,7 @@ export const CheckoutView: React.FC = () => {
                       <button
                         type="button"
                         onClick={handleDetectGpsLocation}
-                        className="px-4 py-2.5 rounded-xl bg-tertiary text-on-tertiary font-label-md text-label-md shadow-xs cursor-pointer flex items-center gap-1.5 self-start hover:opacity-95"
+                        className="px-4 py-2.5 rounded-xl bg-tertiary text-on-tertiary font-label-md text-label-md font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.3)] cursor-pointer flex items-center gap-1.5 self-start hover:brightness-105 active:scale-[0.98] transition-all"
                       >
                         <Icon name="my_location" className="text-lg" />
                         <span>Detect My GPS Location</span>
@@ -946,7 +946,7 @@ export const CheckoutView: React.FC = () => {
                     </div>
 
                     {gpsStatus && (
-                      <div className="p-3.5 rounded-xl bg-tertiary-fixed/60 border border-tertiary/25 text-body-sm text-on-tertiary-fixed flex flex-wrap items-center justify-between gap-2">
+                      <div className="p-3.5 rounded-xl bg-tertiary-fixed/70 border border-tertiary/25 text-body-sm text-on-tertiary-fixed flex flex-wrap items-center justify-between gap-2">
                         <span className="font-semibold flex items-center gap-1.5">
                           <Icon name="check_circle" className="text-base" />
                           <span>{gpsStatus}</span>
@@ -965,7 +965,7 @@ export const CheckoutView: React.FC = () => {
                     )}
 
                     {addressError && (
-                      <div className="p-3.5 rounded-xl bg-error-container text-on-error-container text-body-sm font-medium">
+                      <div className="p-3.5 rounded-xl bg-error-container border border-red-400/25 text-on-error-container text-body-sm font-medium">
                         {addressError}
                       </div>
                     )}
@@ -975,7 +975,7 @@ export const CheckoutView: React.FC = () => {
                       className="space-y-4"
                     >
                       {/* Housing Society Resident Toggle */}
-                      <label className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 flex items-center justify-between cursor-pointer">
+                      <label className="p-4 rounded-xl bg-[#090a0f] border border-white/[0.08] flex items-center justify-between cursor-pointer">
                         <div className="flex items-center gap-3">
                           <Icon
                             name="apartment"
@@ -1003,7 +1003,7 @@ export const CheckoutView: React.FC = () => {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-label-sm font-bold text-on-surface mb-1">
+                          <label className="block text-[10px] font-mono uppercase tracking-[0.16em] text-on-surface-variant mb-1.5">
                             Recipient Full Name *
                           </label>
                           <input
@@ -1011,12 +1011,12 @@ export const CheckoutView: React.FC = () => {
                             required
                             value={customerName}
                             onChange={(e) => setCustomerName(e.target.value)}
-                            className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface text-body-md focus:outline-none focus:border-primary/50"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-label-sm font-bold text-on-surface mb-1">
+                          <label className="block text-[10px] font-mono uppercase tracking-[0.16em] text-on-surface-variant mb-1.5">
                             Flat / Tower / House No. *
                           </label>
                           <input
@@ -1025,12 +1025,12 @@ export const CheckoutView: React.FC = () => {
                             value={flatOrHouse}
                             onChange={(e) => setFlatOrHouse(e.target.value)}
                             placeholder="e.g., Tower B - Flat 402"
-                            className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface placeholder:text-on-surface-variant/60 text-body-md focus:outline-none focus:border-primary/50"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-label-sm font-bold text-on-surface mb-1">
+                          <label className="block text-[10px] font-mono uppercase tracking-[0.16em] text-on-surface-variant mb-1.5">
                             Housing Society / Street / Area *
                           </label>
                           <input
@@ -1039,12 +1039,12 @@ export const CheckoutView: React.FC = () => {
                             value={areaOrSociety}
                             onChange={(e) => setAreaOrSociety(e.target.value)}
                             placeholder="e.g., Kalpataru Harmony Society, Wakad"
-                            className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface placeholder:text-on-surface-variant/60 text-body-md focus:outline-none focus:border-primary/50"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-label-sm font-bold text-on-surface mb-1">
+                          <label className="block text-[10px] font-mono uppercase tracking-[0.16em] text-on-surface-variant mb-1.5">
                             Landmark
                           </label>
                           <input
@@ -1052,12 +1052,12 @@ export const CheckoutView: React.FC = () => {
                             value={landmark}
                             onChange={(e) => setLandmark(e.target.value)}
                             placeholder="e.g., Near Clubhouse Gate"
-                            className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface placeholder:text-on-surface-variant/60 text-body-md focus:outline-none focus:border-primary/50"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-label-sm font-bold text-on-surface mb-1">
+                          <label className="block text-[10px] font-mono uppercase tracking-[0.16em] text-on-surface-variant mb-1.5">
                             City *
                           </label>
                           <input
@@ -1065,12 +1065,12 @@ export const CheckoutView: React.FC = () => {
                             required
                             value={city}
                             onChange={(e) => setCity(e.target.value)}
-                            className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-md"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface text-body-md focus:outline-none focus:border-primary/50"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-label-sm font-bold text-on-surface mb-1">
+                          <label className="block text-[10px] font-mono uppercase tracking-[0.16em] text-on-surface-variant mb-1.5">
                             6-Digit Pincode *
                           </label>
                           <input
@@ -1083,13 +1083,13 @@ export const CheckoutView: React.FC = () => {
                               setPincode(e.target.value.replace(/\D/g, ''))
                             }
                             placeholder="411057"
-                            className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 font-mono text-body-md"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface placeholder:text-on-surface-variant/60 font-mono text-body-md focus:outline-none focus:border-primary/50"
                           />
                         </div>
                       </div>
 
                       {/* Mobile Address Confirmation Card */}
-                      <div className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-2">
+                      <div className="p-4 rounded-xl bg-[#090a0f] border border-white/[0.08] space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="font-label-md text-label-md text-on-surface flex items-center gap-1.5">
                             <Icon
@@ -1166,8 +1166,8 @@ export const CheckoutView: React.FC = () => {
 
                 {/* STAGE 4: FINAL CONFIRMATION & WHATSAPP CONCIERGE DISPATCH */}
                 {stage === 4 && (
-                  <div className="bg-surface-container-lowest rounded-2xl p-6 sm:p-8 border border-outline-variant/25 shadow-[0_6px_20px_rgba(27,42,74,0.04)] space-y-5">
-                    <div className="flex items-center gap-2.5 border-b border-outline-variant/25 pb-4">
+                  <div className="cred-card rounded-3xl p-6 sm:p-8 space-y-5">
+                    <div className="flex items-center gap-2.5 border-b border-white/[0.08] pb-4">
                       <Icon
                         name="verified"
                         className="text-tertiary text-2xl"
@@ -1184,16 +1184,16 @@ export const CheckoutView: React.FC = () => {
                     </div>
 
                     {orderError && (
-                      <div className="p-3.5 rounded-xl bg-error-container text-on-error-container text-body-sm font-medium flex items-center gap-2">
+                      <div className="p-3.5 rounded-xl bg-error-container border border-red-400/25 text-on-error-container text-body-sm font-medium flex items-center gap-2">
                         <Icon name="error" className="text-lg" />
                         <span>{orderError}</span>
                       </div>
                     )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-1.5 text-body-sm">
+                      <div className="p-4 rounded-2xl bg-[#090a0f] border border-white/[0.08] space-y-1.5 text-body-sm">
                         <div className="flex items-center justify-between">
-                          <span className="font-label-sm font-bold text-primary uppercase tracking-wider">
+                          <span className="text-[10px] font-mono font-bold text-primary uppercase tracking-[0.16em]">
                             Verified Buyer &amp; Address
                           </span>
                           <button
@@ -1230,8 +1230,8 @@ export const CheckoutView: React.FC = () => {
                         )}
                       </div>
 
-                      <div className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-2 text-body-sm">
-                        <div className="font-label-sm font-bold text-primary uppercase tracking-wider">
+                      <div className="p-4 rounded-2xl bg-[#090a0f] border border-white/[0.08] space-y-2 text-body-sm">
+                        <div className="text-[10px] font-mono font-bold text-primary uppercase tracking-[0.16em]">
                           Personal Confirmation Call &amp; UPI
                         </div>
                         <p className="text-on-surface-variant">
@@ -1247,11 +1247,11 @@ export const CheckoutView: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="pt-3 flex flex-wrap items-center justify-between gap-4 border-t border-outline-variant/25">
+                    <div className="pt-3 flex flex-wrap items-center justify-between gap-4 border-t border-white/[0.08]">
                       <button
                         type="button"
                         onClick={() => setStage(1)}
-                        className="text-label-md text-on-surface-variant hover:underline cursor-pointer flex items-center gap-1"
+                        className="text-label-md text-on-surface-variant hover:text-on-surface cursor-pointer flex items-center gap-1"
                       >
                         <Icon name="arrow_back" className="text-base" />
                         <span>Back to Bag</span>
@@ -1261,7 +1261,7 @@ export const CheckoutView: React.FC = () => {
                         type="button"
                         disabled={placingOrder}
                         onClick={handlePlaceOrder}
-                        className="px-7 py-3.5 rounded-xl bg-tertiary hover:opacity-95 text-on-tertiary font-label-lg text-label-lg shadow-md cursor-pointer flex items-center gap-2"
+                        className="px-7 py-3.5 rounded-xl bg-gradient-to-b from-[#f0d399] to-[#cfa355] text-[#090a0f] font-bold font-label-lg text-label-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_10px_28px_rgba(229,194,128,0.22)] hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2"
                       >
                         <Icon name="chat" className="text-xl" />
                         <span>
@@ -1277,8 +1277,8 @@ export const CheckoutView: React.FC = () => {
 
               {/* Right 4 Columns: Sticky Order Summary Sidebar */}
               <div className="lg:col-span-4">
-                <aside className="bg-surface-container-lowest rounded-2xl p-5 sm:p-6 border border-outline-variant/25 shadow-[0_6px_20px_rgba(27,42,74,0.04)] sticky top-24 space-y-4">
-                  <h3 className="font-headline-sm text-headline-sm text-on-surface border-b border-outline-variant/25 pb-3">
+                <aside className="cred-card rounded-3xl p-5 sm:p-6 sticky top-24 space-y-4">
+                  <h3 className="font-headline-sm text-headline-sm text-on-surface border-b border-white/[0.08] pb-3">
                     Order Summary
                   </h3>
 
@@ -1299,7 +1299,7 @@ export const CheckoutView: React.FC = () => {
                         {shippingFee === 0 ? 'FREE' : `₹${shippingFee}`}
                       </span>
                     </div>
-                    <div className="pt-3 border-t border-outline-variant/25 flex justify-between items-baseline">
+                    <div className="pt-3 border-t border-white/[0.08] flex justify-between items-baseline">
                       <span className="font-label-lg text-on-surface">
                         Total Payable
                       </span>
@@ -1309,7 +1309,7 @@ export const CheckoutView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/25 text-body-sm text-on-surface-variant space-y-1.5">
+                  <div className="p-3.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-body-sm text-on-surface-variant space-y-1.5">
                     <div className="flex items-center gap-2 text-on-surface font-semibold">
                       <Icon
                         name="verified"

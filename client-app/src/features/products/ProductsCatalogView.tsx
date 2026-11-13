@@ -119,8 +119,8 @@ export const ProductsCatalogView: React.FC = () => {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
           {/* Breadcrumb & Mode Header */}
-          <div className="bg-surface-container-lowest rounded-2xl p-6 mb-6 shadow-[0_6px_20px_rgba(27,42,74,0.04)] border border-outline-variant/25">
-            <div className="flex items-center gap-2 text-label-sm text-on-surface-variant mb-2">
+          <div className="cred-card rounded-3xl p-6 mb-6">
+            <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.08em] sm:tracking-[0.16em] text-on-surface-variant mb-2 whitespace-nowrap">
               <Link
                 href="/"
                 className="hover:text-primary transition-colors flex items-center gap-1"
@@ -154,7 +154,7 @@ export const ProductsCatalogView: React.FC = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by dress, ragi, stole..."
-                  className="w-full bg-surface-container-low focus:bg-surface-container-lowest text-on-surface placeholder:text-on-surface-variant/70 font-body-md text-body-md pl-10 pr-9 py-2.5 rounded-xl border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                  className="w-full bg-[#090a0f] focus:bg-[#0d0f16] text-on-surface placeholder:text-on-surface-variant/60 font-body-md text-body-md pl-10 pr-9 py-2.5 rounded-xl border border-white/[0.08] focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
                 />
                 {searchQuery && (
                   <button
@@ -169,14 +169,14 @@ export const ProductsCatalogView: React.FC = () => {
             </div>
 
             {/* Quick Mode Filter Pills */}
-            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-outline-variant/20">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-4 pt-4 border-t border-white/[0.08]">
               <button
                 type="button"
                 onClick={() => handleModeSwitch('ALL')}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all ${
+                className={`px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold flex items-center gap-1 sm:gap-1.5 whitespace-nowrap cursor-pointer transition-all active:scale-[0.98] ${
                   activeMode === 'ALL'
-                    ? 'bg-primary text-on-primary'
-                    : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
+                    ? 'bg-gradient-to-b from-[#f0d399] to-[#cfa355] text-[#090a0f] font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]'
+                    : 'bg-[#090a0f] text-on-surface-variant border border-white/[0.08] hover:text-on-surface'
                 }`}
               >
                 <Icon name="auto_awesome" className="text-sm" />
@@ -185,10 +185,10 @@ export const ProductsCatalogView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleModeSwitch('DRESS_AND_GIFTS')}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all ${
+                className={`px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold flex items-center gap-1 sm:gap-1.5 whitespace-nowrap cursor-pointer transition-all active:scale-[0.98] ${
                   activeMode === 'DRESS_AND_GIFTS'
-                    ? 'bg-secondary text-on-secondary'
-                    : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
+                    ? 'bg-secondary text-on-secondary shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]'
+                    : 'bg-[#090a0f] text-on-surface-variant border border-white/[0.08] hover:text-on-surface'
                 }`}
               >
                 <Icon name="checkroom" className="text-sm" />
@@ -197,10 +197,10 @@ export const ProductsCatalogView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleModeSwitch('FOODS_ONLY')}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all ${
+                className={`px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold flex items-center gap-1 sm:gap-1.5 whitespace-nowrap cursor-pointer transition-all active:scale-[0.98] ${
                   activeMode === 'FOODS_ONLY'
-                    ? 'bg-tertiary text-on-tertiary'
-                    : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
+                    ? 'bg-tertiary text-on-tertiary shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]'
+                    : 'bg-[#090a0f] text-on-surface-variant border border-white/[0.08] hover:text-on-surface'
                 }`}
               >
                 <Icon name="nutrition" className="text-sm" />
@@ -256,10 +256,10 @@ export const ProductsCatalogView: React.FC = () => {
             {/* Right Product Grid Area (9 cols) */}
             <div className="lg:col-span-9">
               {/* Toolbar */}
-              <div className="bg-surface-container-lowest rounded-xl px-4 py-3 mb-5 border border-outline-variant/25 flex flex-wrap items-center justify-between gap-3">
+              <div className="cred-card rounded-xl px-4 py-3 mb-5 flex flex-wrap items-center justify-between gap-3">
                 <p className="text-body-sm text-on-surface-variant">
                   Showing{' '}
-                  <span className="font-bold text-on-surface">
+                  <span className="font-mono font-bold text-on-surface">
                     {filteredProducts.length}
                   </span>{' '}
                   {filteredProducts.length === 1 ? 'item' : 'items'}
@@ -285,7 +285,7 @@ export const ProductsCatalogView: React.FC = () => {
               </div>
 
               {filteredProducts.length === 0 ? (
-                <div className="bg-surface-container-lowest rounded-2xl p-12 text-center border border-outline-variant/25">
+                <div className="cred-card rounded-2xl p-12 text-center">
                   <Icon
                     name="search_off"
                     className="text-5xl text-outline mb-3 block"

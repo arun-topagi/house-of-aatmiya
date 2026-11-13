@@ -16,15 +16,20 @@ export const StoreVerificationCard: React.FC = () => {
 
   return (
     <section className="py-6 px-4 sm:px-6 max-w-7xl mx-auto">
-      <div className="bg-surface-container-low rounded-2xl p-6 md:p-8 border border-outline-variant/30">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+      <div className="cred-card rounded-3xl p-6 md:p-8 relative overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-[radial-gradient(circle,rgba(229,194,128,0.08)_0%,transparent_70%)]"
+        />
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center relative z-10">
           {/* Column 1: Purity Verification */}
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-primary text-on-primary flex items-center justify-center shrink-0 shadow-sm">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-b from-[#f0d399] to-[#cfa355] text-[#090a0f] flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_6px_18px_rgba(229,194,128,0.2)]">
               <Icon name="verified" className="text-2xl" filled />
             </div>
             <div>
-              <span className="text-label-sm font-label-sm text-primary uppercase tracking-wider block">
+              <span className="text-[9px] sm:text-[10px] font-mono text-primary uppercase tracking-[0.1em] sm:tracking-[0.2em] block whitespace-nowrap">
                 The Aatmiya Guarantee
               </span>
               <h3 className="font-headline-md text-headline-md text-on-surface mt-0.5">
@@ -33,18 +38,20 @@ export const StoreVerificationCard: React.FC = () => {
               <p className="text-body-sm text-on-surface-variant mt-1">
                 Crafted Like Family • Small-Batch Boutique &amp; Clean Pantry
               </p>
-              <p className="text-body-sm text-on-surface mt-1 font-medium">
+              <p className="text-body-sm text-on-surface mt-1.5 font-medium">
                 {guaranteeLine}
               </p>
             </div>
           </div>
 
           {/* Column 2: Batch Schedule & Direct Concierge */}
-          <div className="flex flex-col sm:flex-row lg:flex-col gap-3 border-y lg:border-y-0 lg:border-x border-outline-variant/30 py-4 lg:py-0 lg:px-6">
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-3.5 border-y lg:border-y-0 lg:border-x border-white/[0.08] py-4 lg:py-0 lg:px-6">
             <div className="flex items-center gap-3">
-              <Icon name="schedule" className="text-secondary" />
+              <div className="w-9 h-9 rounded-lg bg-[#171a26] border border-white/[0.08] flex items-center justify-center shrink-0">
+                <Icon name="schedule" className="text-secondary text-lg" />
+              </div>
               <div>
-                <p className="text-label-sm font-label-sm text-on-surface">
+                <p className="text-[11px] font-mono uppercase tracking-wider text-on-surface">
                   Batch &amp; Boutique Schedule
                 </p>
                 <p className="text-body-sm text-on-surface-variant">
@@ -53,9 +60,11 @@ export const StoreVerificationCard: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Icon name="call" className="text-primary" />
+              <div className="w-9 h-9 rounded-lg bg-[#171a26] border border-white/[0.08] flex items-center justify-center shrink-0">
+                <Icon name="call" className="text-primary text-lg" />
+              </div>
               <div>
-                <p className="text-label-sm font-label-sm text-on-surface">
+                <p className="text-[11px] font-mono uppercase tracking-wider text-on-surface">
                   Personal WhatsApp Concierge
                 </p>
                 <a
@@ -71,10 +80,10 @@ export const StoreVerificationCard: React.FC = () => {
           </div>
 
           {/* Column 3: Society Hand-Delivery & GPS Pin */}
-          <div className="relative h-36 rounded-xl overflow-hidden bg-surface-container-high border border-outline-variant/30 flex items-center justify-center p-5">
-            <div className="absolute inset-0 opacity-25 bg-[radial-gradient(#1b2a4a_1px,transparent_1px)] [background-size:12px_12px]" />
-            <div className="relative z-10 bg-surface/95 backdrop-blur-md px-5 py-3.5 rounded-xl shadow-sm flex items-center gap-3 border border-outline-variant/25">
-              <Icon name="my_location" className="text-secondary text-2xl" />
+          <div className="relative h-36 rounded-2xl overflow-hidden bg-[#090a0f] border border-white/[0.08] flex items-center justify-center p-5">
+            <div className="absolute inset-0 opacity-35 bg-[radial-gradient(#e5c280_1px,transparent_1px)] [background-size:14px_14px]" />
+            <div className="relative z-10 bg-[#11131c]/90 backdrop-blur-xl px-5 py-3.5 rounded-xl shadow-[0_12px_30px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.1)] flex items-center gap-3 border border-white/[0.1]">
+              <Icon name="my_location" className="text-primary text-2xl" />
               <div className="text-left">
                 <p className="font-label-md text-label-md text-on-surface">
                   1-Tap GPS &amp; Society Delivery

@@ -115,9 +115,9 @@ export const MobileConfirmAddressView: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-surface">
       <Header />
       <main className="flex-1 max-w-lg w-full mx-auto px-4 pt-24 pb-28">
-        <div className="bg-surface-container-lowest rounded-3xl p-6 border border-outline-variant/25 shadow-sm space-y-5">
+        <div className="cred-card rounded-3xl p-6 space-y-5">
           <div>
-            <span className="text-label-sm font-bold uppercase text-tertiary">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-tertiary">
               Mobile GPS Address Confirmation
             </span>
             <h1 className="font-headline-md text-2xl text-on-surface mt-1">
@@ -132,14 +132,14 @@ export const MobileConfirmAddressView: React.FC = () => {
           <button
             type="button"
             onClick={handleCaptureMobileGps}
-            className="w-full py-3 rounded-xl bg-tertiary text-on-tertiary font-label-md text-label-md shadow-xs cursor-pointer flex items-center justify-center gap-2"
+            className="w-full py-3 rounded-xl bg-tertiary text-on-tertiary font-label-md text-label-md font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.3)] hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
           >
             <Icon name="my_location" className="text-lg" />
             <span>1-Tap Capture My Phone&apos;s Current GPS Pin</span>
           </button>
 
           {statusMsg && (
-            <div className="p-3 rounded-xl bg-tertiary-fixed/70 text-on-tertiary-fixed text-body-sm font-bold">
+            <div className="p-3 rounded-xl bg-tertiary-fixed/70 border border-tertiary/25 text-on-tertiary-fixed text-body-sm font-bold">
               {statusMsg}
             </div>
           )}
@@ -170,7 +170,7 @@ export const MobileConfirmAddressView: React.FC = () => {
                 placeholder="Verified WhatsApp Phone (10 digits)"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-sm font-semibold"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface placeholder:text-on-surface-variant/60 text-body-sm font-semibold focus:outline-none focus:border-primary/50"
               />
               <input
                 type="text"
@@ -178,7 +178,7 @@ export const MobileConfirmAddressView: React.FC = () => {
                 placeholder="Flat / Tower / House No."
                 value={flatOrHouse}
                 onChange={(e) => setFlatOrHouse(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-sm font-semibold"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface placeholder:text-on-surface-variant/60 text-body-sm font-semibold focus:outline-none focus:border-primary/50"
               />
               <input
                 type="text"
@@ -186,7 +186,7 @@ export const MobileConfirmAddressView: React.FC = () => {
                 placeholder="Housing Society / Area"
                 value={areaOrSociety}
                 onChange={(e) => setAreaOrSociety(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-sm font-semibold"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface placeholder:text-on-surface-variant/60 text-body-sm font-semibold focus:outline-none focus:border-primary/50"
               />
               <div className="grid grid-cols-2 gap-3">
                 <input
@@ -195,7 +195,7 @@ export const MobileConfirmAddressView: React.FC = () => {
                   placeholder="City"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-sm font-semibold"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface placeholder:text-on-surface-variant/60 text-body-sm font-semibold focus:outline-none focus:border-primary/50"
                 />
                 <input
                   type="text"
@@ -206,7 +206,7 @@ export const MobileConfirmAddressView: React.FC = () => {
                   onChange={(e) =>
                     setPincode(e.target.value.replace(/\D/g, ''))
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-sm font-semibold"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface placeholder:text-on-surface-variant/60 text-body-sm font-mono font-semibold focus:outline-none focus:border-primary/50"
                 />
               </div>
               <input
@@ -214,7 +214,7 @@ export const MobileConfirmAddressView: React.FC = () => {
                 placeholder="Landmark (Optional)"
                 value={landmark}
                 onChange={(e) => setLandmark(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 text-body-sm font-semibold"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#090a0f] border border-white/[0.08] text-on-surface placeholder:text-on-surface-variant/60 text-body-sm font-semibold focus:outline-none focus:border-primary/50"
               />
               <label className="flex items-center gap-2 text-body-sm font-semibold text-on-surface">
                 <input
