@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useAppSelector } from '@/store';
-import { Icon } from '@/elements';
+import { Icon, BrandMark } from '@/elements';
 
 export const Footer: React.FC = () => {
   const { whatsappPhone } = useAppSelector((s) => s.app);
@@ -12,14 +12,7 @@ export const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-b from-[#1a1d2b] to-[#0e1018] border border-white/[0.12] flex items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
-              <div className="grid grid-cols-2 gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#f5f5f7]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-[#e5c280]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-[#d96b78]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
-              </div>
-            </div>
+            <BrandMark size="sm" />
             <div>
               <span className="font-headline-md text-lg sm:text-xl text-on-surface font-bold block leading-none whitespace-nowrap">
                 The House of Aatmiya

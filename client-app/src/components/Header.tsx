@@ -10,7 +10,7 @@ import {
   StorefrontMode,
   selectCartTotalItems,
 } from '@/store';
-import { Icon, Badge } from '@/elements';
+import { Icon, Badge, BrandMark } from '@/elements';
 
 export interface HeaderProps {
   searchQuery?: string;
@@ -107,14 +107,10 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={() => dispatch(setStorefrontMode('ALL'))}
             className="flex items-center gap-3 group"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-b from-[#1a1d2b] to-[#0e1018] border border-white/[0.12] flex flex-col items-center justify-center shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_6px_18px_rgba(0,0,0,0.5)] group-hover:scale-105 transition-transform">
-              <div className="grid grid-cols-2 gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#f5f5f7]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-[#e5c280]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-[#d96b78]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
-              </div>
-            </div>
+            <BrandMark
+              size="md"
+              className="group-hover:scale-105 transition-transform"
+            />
             <div>
               <span className="font-headline-md text-base sm:text-xl font-bold text-on-surface tracking-tight block leading-none whitespace-nowrap">
                 The House of Aatmiya
