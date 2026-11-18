@@ -147,22 +147,12 @@ export const CheckoutView: React.FC = () => {
       /^\d{6}$/.test((pincode || address.pincode || '').trim()),
   );
 
-  // Dynamic Stepper: hides Stage 2 (OTP) & Stage 3 (Address) when already verified & saved
-  const visibleSteps = [
-    { id: 1 as CheckoutStage, label: 'Review Bag', icon: 'shopping_bag' },
-    ...(!isAuthenticated
-      ? [{ id: 2 as CheckoutStage, label: 'WhatsApp OTP', icon: 'chat' }]
-      : []),
-    ...(!isAuthenticated || !hasSavedAddress || stage === 3
-      ? [
-          {
-            id: 3 as CheckoutStage,
-            label: 'GPS & Address',
-            icon: 'my_location',
-          },
-        ]
-      : []),
-    { id: 4 as CheckoutStage, label: 'Place Order', icon: 'verified' },
+  // All 4 checkout stages remain visible so progress is clear and never shifts unexpectedly
+  const checkoutSteps: { id: CheckoutStage; label: string; icon: string }[] = [
+    { id: 1, label: 'Review Bag', icon: 'shopping_bag' },
+    { id: 2, label: 'WhatsApp OTP', icon: 'chat' },
+    { id: 3, label: 'GPS & Address', icon: 'my_location' },
+    { id: 4, label: 'Place Order', icon: 'verified' },
   ];
 
   const handleLoadSampleItems = () => {
@@ -500,38 +490,44 @@ export const CheckoutView: React.FC = () => {
             </Link>
           </div>
 
-          {/* Dynamic Checkout Stepper */}
+          {/* 4-Stage Checkout Stepper */}
           {!confirmedOrder && (
-            <div className="w-full cred-card rounded-2xl p-4 sm:p-5 mb-6">
-              <div
-                className={`grid gap-2 ${
-                  visibleSteps.length === 2
-                    ? 'grid-cols-2'
-                    : visibleSteps.length === 3
-                      ? 'grid-cols-3'
-                      : 'grid-cols-4'
-                }`}
-              >
-                {visibleSteps.map((s, idx) => {
+            <div className="w-full cred-card rounded-2xl p-3 sm:p-4 md:p-5 mb-6">
+              <div className="flex items-center gap-1.5 sm:gap-2 md:grid md:grid-cols-4 md:gap-3">
+                {checkoutSteps.map((s, idx) => {
                   const isActive = stage === s.id;
-                  const isCompleted = stage > s.id;
+                  const isCompleted =
+                    !isActive &&
+                    (stage > s.id ||
+                      (s.id === 2 && isAuthenticated) ||
+                      (s.id === 3 && isAuthenticated && hasSavedAddress));
+                  const canNavigate =
+                    s.id === 1 ||
+                    s.id < stage ||
+                    (cartItems.length > 0 &&
+                      ((s.id === 2 && isAuthenticated) ||
+                        (s.id === 3 && isAuthenticated) ||
+                        (s.id === 4 && isAuthenticated && hasSavedAddress)));
+
                   return (
                     <button
                       key={s.id}
                       type="button"
+                      disabled={!canNavigate && !isActive}
                       onClick={() => {
-                        if (s.id < stage) setStage(s.id);
+                        if (canNavigate) setStage(s.id);
                       }}
-                      className={`flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl transition-all text-left cursor-pointer ${
+                      title={`Step ${idx + 1}: ${s.label}`}
+                      className={`flex items-center rounded-xl transition-all text-left overflow-hidden ${
                         isActive
-                          ? 'bg-gradient-to-b from-[#f0d399] to-[#cfa355] text-[#090a0f] font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]'
+                          ? 'flex-1 min-w-0 gap-2.5 px-3 py-2.5 md:p-3 bg-gradient-to-b from-[#f0d399] to-[#cfa355] text-[#090a0f] font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] cursor-pointer'
                           : isCompleted
-                            ? 'bg-tertiary-fixed/70 border border-tertiary/25 text-on-tertiary-fixed hover:bg-tertiary-fixed'
-                            : 'bg-[#090a0f] border border-white/[0.06] text-on-surface-variant'
+                            ? 'shrink-0 md:min-w-0 gap-1.5 md:gap-2.5 px-2.5 py-2.5 md:p-3 bg-tertiary-fixed/70 border border-tertiary/25 text-on-tertiary-fixed hover:bg-tertiary-fixed cursor-pointer'
+                            : 'shrink-0 md:min-w-0 gap-1.5 md:gap-2.5 px-2.5 py-2.5 md:p-3 bg-[#090a0f] border border-white/[0.06] text-on-surface-variant disabled:opacity-60 disabled:cursor-not-allowed'
                       }`}
                     >
                       <div
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        className={`w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center shrink-0 ${
                           isActive
                             ? 'bg-[#090a0f]/15 text-[#090a0f]'
                             : isCompleted
@@ -541,14 +537,26 @@ export const CheckoutView: React.FC = () => {
                       >
                         <Icon
                           name={isCompleted ? 'check' : s.icon}
-                          className="text-lg"
+                          className="text-base md:text-lg"
                         />
                       </div>
-                      <div className="min-w-0">
-                        <span className="text-[8.5px] sm:text-[10px] font-mono font-bold uppercase tracking-[0.04em] sm:tracking-wider block opacity-80 whitespace-nowrap">
+
+                      {/* Mobile compact step index when inactive; full details when active or on desktop */}
+                      {!isActive && (
+                        <span className="md:hidden text-[10px] font-mono font-bold tracking-tight">
+                          {idx + 1}
+                        </span>
+                      )}
+
+                      <div
+                        className={`min-w-0 flex-1 ${
+                          isActive ? 'block' : 'hidden md:block'
+                        }`}
+                      >
+                        <span className="text-[9px] md:text-[10px] font-mono font-bold uppercase tracking-wider block opacity-80 truncate">
                           Step {idx + 1}
                         </span>
-                        <span className="font-label-md text-[11px] sm:text-label-md whitespace-nowrap block">
+                        <span className="font-label-md text-xs md:text-label-md truncate block">
                           {s.label}
                         </span>
                       </div>
