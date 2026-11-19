@@ -8,8 +8,6 @@ import {
   AdminProduct,
   adminProductService,
   authService,
-  FALLBACK_ADMIN_ORDERS,
-  FALLBACK_ADMIN_PRODUCTS,
   OrderStatus,
   StorefrontMode,
 } from '@/services';
@@ -33,25 +31,25 @@ const CATEGORY_MAP: Record<
     id: 'cat-snacks',
     slug: 'kids-snacks',
     modeGroup: 'FOODS_ONLY',
-    name: { en: "Kids' Clean Snacks & Pantry" },
+    name: { en: 'Pure Homemade Foods' },
   },
   dresses: {
     id: 'cat-dresses',
     slug: 'dresses',
     modeGroup: 'DRESS_AND_GIFTS',
-    name: { en: "Women's Pure Cotton Dresses" },
+    name: { en: "Women's Cotton Wear" },
   },
   kurtas: {
     id: 'cat-kurtas',
     slug: 'kurtas',
     modeGroup: 'DRESS_AND_GIFTS',
-    name: { en: 'Pure Cotton Kurtas & Co-ords' },
+    name: { en: "Men's Cotton Wear" },
   },
   stoles: {
     id: 'cat-stoles',
     slug: 'stoles',
     modeGroup: 'DRESS_AND_GIFTS',
-    name: { en: 'Handcrafted Cotton Stoles' },
+    name: { en: 'Free-Size Cotton Shawls' },
   },
   hampers: {
     id: 'cat-hampers',
@@ -74,7 +72,7 @@ export const AdminDashboardView: React.FC = () => {
   const [loginError, setLoginError] = useState<string | null>(null);
 
   // Orders State + Toolbar Filters + Flyout
-  const [orders, setOrders] = useState<AdminOrder[]>(FALLBACK_ADMIN_ORDERS);
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [orderIdSearch, setOrderIdSearch] = useState('');
   const [customerNameSearch, setCustomerNameSearch] = useState('');
   const [phoneSearch, setPhoneSearch] = useState('');
@@ -82,9 +80,7 @@ export const AdminDashboardView: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
 
   // Products State + Toolbar Filters + Flyout
-  const [products, setProducts] = useState<AdminProduct[]>(
-    FALLBACK_ADMIN_PRODUCTS,
-  );
+  const [products, setProducts] = useState<AdminProduct[]>([]);
   const [productNameSearch, setProductNameSearch] = useState('');
   const [productCategorySearch, setProductCategorySearch] = useState('');
   const [productStockStatus, setProductStockStatus] = useState('');
@@ -108,20 +104,20 @@ export const AdminDashboardView: React.FC = () => {
     adminOrderService
       .getOrders()
       .then((list) => {
-        if (Array.isArray(list) && list.length > 0) {
-          setOrders(list);
-        }
+        setOrders(Array.isArray(list) ? list : []);
       })
-      .catch(() => {});
+      .catch(() => {
+        setOrders([]);
+      });
 
     adminProductService
       .getProducts()
       .then((list) => {
-        if (Array.isArray(list) && list.length > 0) {
-          setProducts(list);
-        }
+        setProducts(Array.isArray(list) ? list : []);
       })
-      .catch(() => {});
+      .catch(() => {
+        setProducts([]);
+      });
 
     adminProductService
       .getStoreSettings()

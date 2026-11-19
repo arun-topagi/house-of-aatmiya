@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Header, AdvisoryStrip, BottomNav, Footer } from '@/components';
 import { Badge, Button, Icon } from '@/elements';
 import {
-  FALLBACK_PRODUCTS,
+  catalogService,
   orderService,
   userAuthService,
 } from '@/services';
@@ -155,37 +155,33 @@ export const CheckoutView: React.FC = () => {
     { id: 4, label: 'Place Order', icon: 'verified' },
   ];
 
-  const handleLoadSampleItems = () => {
-    const snack = FALLBACK_PRODUCTS[0];
-    const dress = FALLBACK_PRODUCTS[4];
-    dispatch(
-      addToCart({
-        productId: snack.id,
-        variantId: snack.variants[0].id,
-        sku: snack.sku,
-        productName: snack.name.en,
-        categorySlug: snack.category.slug,
-        sizePack: snack.variants[0].sizePack,
-        unitPrice: snack.variants[0].price,
-        quantity: 1,
-        imageUrl: snack.imageUrl,
-        isMadeToBatch: true,
-      }),
-    );
-    dispatch(
-      addToCart({
-        productId: dress.id,
-        variantId: dress.variants[1].id,
-        sku: dress.sku,
-        productName: dress.name.en,
-        categorySlug: dress.category.slug,
-        sizePack: dress.variants[1].sizePack,
-        unitPrice: dress.variants[1].price,
-        quantity: 1,
-        imageUrl: dress.imageUrl,
-        isMadeToBatch: false,
-      }),
-    );
+  const handleLoadSampleItems = async () => {
+    try {
+      const { items } = await catalogService.getProducts({
+        mode: 'DRESS_AND_GIFTS',
+      });
+      const sampleItems = items.slice(0, 2);
+      for (const item of sampleItems) {
+        const variant = item.variants[0];
+        if (!variant) continue;
+        dispatch(
+          addToCart({
+            productId: item.id,
+            variantId: variant.id,
+            sku: item.sku,
+            productName: item.name.en,
+            categorySlug: item.category.slug,
+            sizePack: variant.sizePack,
+            unitPrice: variant.price,
+            quantity: 1,
+            imageUrl: item.imageUrl,
+            isMadeToBatch: variant.isMadeToBatch,
+          }),
+        );
+      }
+    } catch {
+      // Ignore if backend is offline
+    }
   };
 
   // --- STAGE 2: WHATSAPP OTP HANDLERS ---
@@ -631,31 +627,39 @@ export const CheckoutView: React.FC = () => {
                     </div>
 
                     {cartItems.length === 0 ? (
-                      <div className="py-10 text-center space-y-4">
+                      <div className="py-8 sm:py-10 px-2 text-center space-y-4">
                         <Icon
                           name="shopping_bag"
                           className="text-5xl text-outline block mx-auto"
                         />
-                        <p className="text-body-md text-on-surface-variant">
-                          Your bag is currently empty.
-                        </p>
-                        <div className="flex flex-wrap justify-center gap-3">
+                        <div className="space-y-1">
+                          <p className="text-body-md text-on-surface font-medium">
+                            Your bag is currently empty.
+                          </p>
+                          <p className="text-body-sm text-on-surface-variant">
+                            Try a sample curation (1 Pure Cotton Top + 1
+                            Free-Size Cotton Shawl) or explore the catalog.
+                          </p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 max-w-sm sm:max-w-none mx-auto pt-1">
                           <Button
                             type="button"
                             onClick={handleLoadSampleItems}
                             variant="primary"
+                            className="w-full sm:w-auto px-5 py-3"
                           >
-                            <Icon name="auto_awesome" className="text-base" />
-                            <span>
-                              Load Sample Bag (1 Kids&apos; Snack + 1 Adult
-                              Cotton Dress)
-                            </span>
+                            <Icon
+                              name="auto_awesome"
+                              className="text-base shrink-0"
+                            />
+                            <span>Load Sample Bag</span>
                           </Button>
                           <Link
                             href="/products"
-                            className="px-4 py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md border border-outline-variant/30"
+                            className="w-full sm:w-auto px-5 py-3 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md border border-outline-variant/30 inline-flex items-center justify-center gap-2 transition-colors"
                           >
-                            Browse Catalog
+                            <Icon name="storefront" className="text-base" />
+                            <span>Browse Catalog</span>
                           </Link>
                         </div>
                       </div>
@@ -766,16 +770,19 @@ export const CheckoutView: React.FC = () => {
                               }
                             }}
                             variant="primary"
-                            className="px-6 py-3 text-sm"
+                            className="w-full sm:w-auto px-6 py-3 text-sm"
                           >
                             <span>
                               {!isAuthenticated
-                                ? 'Continue to WhatsApp OTP Login'
+                                ? 'Continue to WhatsApp OTP'
                                 : !hasSavedAddress
                                   ? 'Continue to GPS & Address'
-                                  : 'Proceed to Place Order (OTP & Address Verified)'}
+                                  : 'Proceed to Place Order'}
                             </span>
-                            <Icon name="arrow_forward" className="text-base" />
+                            <Icon
+                              name="arrow_forward"
+                              className="text-base shrink-0"
+                            />
                           </Button>
                         </div>
                       </>

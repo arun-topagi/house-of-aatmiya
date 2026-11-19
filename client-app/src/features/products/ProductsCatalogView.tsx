@@ -4,16 +4,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   useAppDispatch,
-  useAppSelector,
   setStorefrontMode,
-  StorefrontMode,
 } from '@/store';
 import {
   CatalogCategory,
   CatalogProduct,
   catalogService,
-  FALLBACK_CATEGORIES,
-  FALLBACK_PRODUCTS,
 } from '@/services';
 import {
   Header,
@@ -30,12 +26,9 @@ export type SortOption = 'featured' | 'price_asc' | 'price_desc';
 
 export const ProductsCatalogView: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { activeMode } = useAppSelector((s) => s.app);
 
-  const [categories, setCategories] = useState<CatalogCategory[]>(
-    FALLBACK_CATEGORIES,
-  );
-  const [products, setProducts] = useState<CatalogProduct[]>(FALLBACK_PRODUCTS);
+  const [categories, setCategories] = useState<CatalogCategory[]>([]);
+  const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [selectedCategorySlug, setSelectedCategorySlug] = useState<
     string | null
   >(null);
@@ -44,11 +37,18 @@ export const ProductsCatalogView: React.FC = () => {
   const [sortBy, setSortBy] = useState<SortOption>('featured');
 
   useEffect(() => {
-    catalogService.getCatalogByMode(activeMode).then((data) => {
-      setCategories(data.categories);
-      setProducts(data.products);
-    });
-  }, [activeMode]);
+    dispatch(setStorefrontMode('DRESS_AND_GIFTS'));
+    catalogService
+      .getCatalogByMode('DRESS_AND_GIFTS')
+      .then((data) => {
+        setCategories(data.categories);
+        setProducts(data.products);
+      })
+      .catch(() => {
+        setCategories([]);
+        setProducts([]);
+      });
+  }, [dispatch]);
 
   const sortOptions = [
     { value: 'featured', label: 'Sort: Featured' },
@@ -105,11 +105,6 @@ export const ProductsCatalogView: React.FC = () => {
     setSortBy('featured');
   };
 
-  const handleModeSwitch = (mode: StorefrontMode) => {
-    setSelectedCategorySlug(null);
-    dispatch(setStorefrontMode(mode));
-  };
-
   return (
     <div className="min-h-screen flex flex-col bg-surface">
       <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
@@ -138,8 +133,9 @@ export const ProductsCatalogView: React.FC = () => {
                   {selectedCategoryName}
                 </h1>
                 <p className="text-body-md text-on-surface-variant mt-1">
-                  Adult pure cotton dresses &amp; kurtas (S–XL), free-size mulmul
-                  stoles, festive hampers, and weekly fresh kids&apos; snacks
+                  Women&apos;s &amp; men&apos;s pure cotton tops, shirts &amp;
+                  pants, free-size cotton shawls (shaal), and signature gift
+                  hampers
                 </p>
               </div>
 
@@ -153,7 +149,7 @@ export const ProductsCatalogView: React.FC = () => {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by dress, ragi, stole..."
+                  placeholder="Search by dress, kurta, stole..."
                   className="w-full bg-[#090a0f] focus:bg-[#0d0f16] text-on-surface placeholder:text-on-surface-variant/60 font-body-md text-body-md pl-10 pr-9 py-2.5 rounded-xl border border-white/[0.08] focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
                 />
                 {searchQuery && (
@@ -166,46 +162,6 @@ export const ProductsCatalogView: React.FC = () => {
                   </button>
                 )}
               </div>
-            </div>
-
-            {/* Quick Mode Filter Pills */}
-            <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-4 pt-4 border-t border-white/[0.08]">
-              <button
-                type="button"
-                onClick={() => handleModeSwitch('ALL')}
-                className={`px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold flex items-center gap-1 sm:gap-1.5 whitespace-nowrap cursor-pointer transition-all active:scale-[0.98] ${
-                  activeMode === 'ALL'
-                    ? 'bg-gradient-to-b from-[#f0d399] to-[#cfa355] text-[#090a0f] font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]'
-                    : 'bg-[#090a0f] text-on-surface-variant border border-white/[0.08] hover:text-on-surface'
-                }`}
-              >
-                <Icon name="auto_awesome" className="text-sm" />
-                <span>All Modes</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleModeSwitch('DRESS_AND_GIFTS')}
-                className={`px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold flex items-center gap-1 sm:gap-1.5 whitespace-nowrap cursor-pointer transition-all active:scale-[0.98] ${
-                  activeMode === 'DRESS_AND_GIFTS'
-                    ? 'bg-secondary text-on-secondary shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]'
-                    : 'bg-[#090a0f] text-on-surface-variant border border-white/[0.08] hover:text-on-surface'
-                }`}
-              >
-                <Icon name="checkroom" className="text-sm" />
-                <span>Dresses &amp; Gifts Focus</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleModeSwitch('FOODS_ONLY')}
-                className={`px-2.5 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold flex items-center gap-1 sm:gap-1.5 whitespace-nowrap cursor-pointer transition-all active:scale-[0.98] ${
-                  activeMode === 'FOODS_ONLY'
-                    ? 'bg-tertiary text-on-tertiary shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]'
-                    : 'bg-[#090a0f] text-on-surface-variant border border-white/[0.08] hover:text-on-surface'
-                }`}
-              >
-                <Icon name="nutrition" className="text-sm" />
-                <span>Pure Foods Focus</span>
-              </button>
             </div>
           </div>
 

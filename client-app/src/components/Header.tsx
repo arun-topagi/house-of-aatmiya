@@ -7,7 +7,6 @@ import {
   useAppDispatch,
   useAppSelector,
   setStorefrontMode,
-  StorefrontMode,
   selectCartTotalItems,
 } from '@/store';
 import { Icon, Badge, BrandMark } from '@/elements';
@@ -17,36 +16,6 @@ export interface HeaderProps {
   onSearchChange?: (query: string) => void;
 }
 
-const MODE_OPTIONS: {
-  id: StorefrontMode;
-  label: string;
-  shortLabel: string;
-  href: string;
-  icon: string;
-}[] = [
-  {
-    id: 'ALL',
-    label: 'All Curations',
-    shortLabel: 'All',
-    href: '/',
-    icon: 'auto_awesome',
-  },
-  {
-    id: 'DRESS_AND_GIFTS',
-    label: 'Dresses & Gifts',
-    shortLabel: 'Boutique',
-    href: '/boutique',
-    icon: 'checkroom',
-  },
-  {
-    id: 'FOODS_ONLY',
-    label: 'Pure Foods',
-    shortLabel: 'Foods',
-    href: '/foods',
-    icon: 'nutrition',
-  },
-];
-
 export const Header: React.FC<HeaderProps> = ({
   searchQuery,
   onSearchChange,
@@ -54,7 +23,6 @@ export const Header: React.FC<HeaderProps> = ({
   const dispatch = useAppDispatch();
   const router = useRouter();
   const pathname = usePathname();
-  const { activeMode, allowModeSwitching } = useAppSelector((s) => s.app);
   const totalCartItems = useAppSelector(selectCartTotalItems);
   const { isAuthenticated, user } = useAppSelector((s) => s.userAuth);
   const [localSearch, setLocalSearch] = React.useState(searchQuery ?? '');
@@ -79,24 +47,6 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  const handleModeSelect = (mode: StorefrontMode, href: string) => {
-    dispatch(setStorefrontMode(mode));
-    if (
-      pathname === '/checkout' ||
-      pathname === '/orders' ||
-      pathname === '/profile' ||
-      pathname?.startsWith('/products/')
-    ) {
-      router.push(href);
-    } else if (
-      pathname === '/' ||
-      pathname === '/boutique' ||
-      pathname === '/foods'
-    ) {
-      router.push(href);
-    }
-  };
-
   return (
     <header className="fixed top-0 w-full z-50 bg-[#090a0f]/80 backdrop-blur-2xl border-b border-white/[0.08] shadow-[0_12px_32px_rgba(0,0,0,0.45)] transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex justify-between items-center h-16 sm:h-20 gap-3">
@@ -104,7 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-3 shrink-0">
           <Link
             href="/"
-            onClick={() => dispatch(setStorefrontMode('ALL'))}
+            onClick={() => dispatch(setStorefrontMode('DRESS_AND_GIFTS'))}
             className="flex items-center gap-3 group"
           >
             <BrandMark
@@ -122,39 +72,9 @@ export const Header: React.FC<HeaderProps> = ({
           </Link>
         </div>
 
-        {/* Center: 3-Mode Storefront Switcher Pills (Desktop) + Search */}
-        <div className="flex-1 max-w-2xl hidden md:flex items-center justify-center gap-3">
-          {allowModeSwitching && (
-            <nav
-              aria-label="Storefront Experience Modes"
-              className="flex items-center bg-[#11131c] p-1 rounded-full border border-white/[0.08] shadow-[inset_0_2px_6px_rgba(0,0,0,0.6)] shrink-0"
-            >
-              {MODE_OPTIONS.map((m) => {
-                const isSelected = activeMode === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => handleModeSelect(m.id, m.href)}
-                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer active:scale-[0.98] ${
-                      isSelected
-                        ? m.id === 'FOODS_ONLY'
-                          ? 'bg-tertiary text-on-tertiary shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]'
-                          : m.id === 'DRESS_AND_GIFTS'
-                            ? 'bg-secondary text-on-secondary shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]'
-                            : 'bg-gradient-to-b from-[#f0d399] to-[#cfa355] text-[#090a0f] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]'
-                        : 'text-on-surface-variant hover:text-on-surface'
-                    }`}
-                  >
-                    <Icon name={m.icon} className="text-[16px]" />
-                    <span>{m.label}</span>
-                  </button>
-                );
-              })}
-            </nav>
-          )}
-
-          <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-xs">
+        {/* Center: Desktop Search */}
+        <div className="flex-1 max-w-md hidden md:flex items-center justify-center">
+          <form onSubmit={handleSearchSubmit} className="relative w-full">
             <Icon
               name="search"
               className="text-on-surface-variant text-[18px] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -163,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({
               type="text"
               value={localSearch}
               onChange={(e) => handleSearchInput(e.target.value)}
-              placeholder="Search cotton dresses, ragi cookies..."
+              placeholder="Search pure cotton dresses, kurtas, stoles..."
               className="w-full bg-[#11131c] hover:bg-[#151824] focus:bg-[#171a27] text-on-surface placeholder:text-on-surface-variant/60 font-body-sm text-body-sm pl-10 pr-8 py-2 rounded-full border border-white/[0.08] focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
             />
             {localSearch && (
@@ -183,6 +103,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <Link
             href="/products"
+            onClick={() => dispatch(setStorefrontMode('DRESS_AND_GIFTS'))}
             className={`hidden lg:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-label-md font-label-md border transition-all ${
               pathname === '/products'
                 ? 'bg-primary/15 text-primary border-primary/35'

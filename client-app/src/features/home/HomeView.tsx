@@ -3,7 +3,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   useAppDispatch,
-  useAppSelector,
   setStorefrontMode,
   syncStoreSettings,
   StorefrontMode,
@@ -12,8 +11,6 @@ import {
   CatalogCategory,
   CatalogProduct,
   catalogService,
-  FALLBACK_CATEGORIES,
-  FALLBACK_PRODUCTS,
 } from '@/services';
 import {
   Header,
@@ -33,34 +30,42 @@ export interface HomeViewProps {
 
 export const HomeView: React.FC<HomeViewProps> = ({ forcedMode }) => {
   const dispatch = useAppDispatch();
-  const { activeMode } = useAppSelector((s) => s.app);
-  const effectiveMode = forcedMode || activeMode;
+  const effectiveMode: StorefrontMode = forcedMode || 'DRESS_AND_GIFTS';
 
-  const [categories, setCategories] = useState<CatalogCategory[]>(
-    FALLBACK_CATEGORIES,
-  );
-  const [products, setProducts] = useState<CatalogProduct[]>(FALLBACK_PRODUCTS);
+  const [categories, setCategories] = useState<CatalogCategory[]>([]);
+  const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [selectedCategorySlug, setSelectedCategorySlug] = useState<
     string | null
   >(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    if (forcedMode) {
-      dispatch(setStorefrontMode(forcedMode));
-    } else {
-      catalogService.getStoreSettings().then((settings) => {
-        dispatch(syncStoreSettings(settings));
-      });
-    }
-  }, [forcedMode, dispatch]);
+    dispatch(setStorefrontMode(effectiveMode));
+    catalogService
+      .getStoreSettings()
+      .then((settings) => {
+        dispatch(
+          syncStoreSettings({
+            ...settings,
+            defaultMode: effectiveMode,
+          }),
+        );
+      })
+      .catch(() => {});
+  }, [effectiveMode, dispatch]);
 
   useEffect(() => {
     setSelectedCategorySlug(null);
-    catalogService.getCatalogByMode(effectiveMode).then((data) => {
-      setCategories(data.categories);
-      setProducts(data.products);
-    });
+    catalogService
+      .getCatalogByMode(effectiveMode)
+      .then((data) => {
+        setCategories(data.categories);
+        setProducts(data.products);
+      })
+      .catch(() => {
+        setCategories([]);
+        setProducts([]);
+      });
   }, [effectiveMode]);
 
   const filteredProducts = useMemo(() => {
@@ -81,10 +86,10 @@ export const HomeView: React.FC<HomeViewProps> = ({ forcedMode }) => {
   const selectedCategoryName = useMemo(() => {
     if (!selectedCategorySlug) {
       if (effectiveMode === 'DRESS_AND_GIFTS') {
-        return 'Pure Cotton Dresses, Kurtas, Stoles & Gift Hampers';
+        return 'Pure Cotton Apparel, Free-Size Shawls & Gift Hampers';
       }
       if (effectiveMode === 'FOODS_ONLY') {
-        return "Weekly Fresh Batch: Kids' Clean Snacks & Family Pantry";
+        return 'Pure Bilona A2 Cow Ghee & Dry Fruits Laddu';
       }
       return undefined;
     }

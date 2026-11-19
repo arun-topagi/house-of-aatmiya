@@ -73,7 +73,7 @@ export const StoreVerificationCard: React.FC = () => {
                   rel="noopener noreferrer"
                   className="text-body-sm text-primary font-semibold hover:underline"
                 >
-                  +{whatsappPhone} (Fit Check &amp; Custom Hampers)
+                  +{whatsappPhone} (Personal Fit Check &amp; Concierge)
                 </a>
               </div>
             </div>

@@ -2,12 +2,7 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import HttpFactory from '@/utils/httpFactory';
 import { axiosBaseQuery } from './axiosBaseQuery';
 import { StorefrontMode } from '@/store';
-import {
-  CatalogCategory,
-  CatalogProduct,
-  FALLBACK_CATEGORIES,
-  FALLBACK_PRODUCTS,
-} from './api';
+import { CatalogCategory, CatalogProduct } from './api';
 
 export interface StoreSettingsResponse {
   defaultMode: StorefrontMode;
@@ -23,18 +18,8 @@ export class CatalogService extends HttpFactory {
   }
 
   async getStoreSettings(): Promise<StoreSettingsResponse> {
-    try {
-      const res = await this.get('/store-settings');
-      return this.unwrap<StoreSettingsResponse>(res);
-    } catch {
-      return {
-        defaultMode: 'ALL',
-        allowModeSwitching: true,
-        nextFoodBatchLabel:
-          'Next Fresh Batch: Friday (Orders close Wednesday)',
-        whatsappPhone: '919876543210',
-      };
-    }
+    const res = await this.get('/store-settings');
+    return this.unwrap<StoreSettingsResponse>(res);
   }
 
   async getCategories(mode?: StorefrontMode): Promise<CatalogCategory[]> {
@@ -52,31 +37,26 @@ export class CatalogService extends HttpFactory {
     return this.unwrap<{ items: CatalogProduct[] }>(res);
   }
 
+  async getProductById(id: string): Promise<CatalogProduct> {
+    const res = await this.get(`/products/${id}`);
+    return this.unwrap<CatalogProduct>(res);
+  }
+
   async getCatalogByMode(
     mode: StorefrontMode,
     categorySlug?: string,
   ): Promise<{ categories: CatalogCategory[]; products: CatalogProduct[] }> {
-    try {
-      const [categories, productsData] = await Promise.all([
-        this.getCategories(mode),
-        this.getProducts({ mode, categorySlug }),
-      ]);
+    const effectiveMode: StorefrontMode =
+      mode === 'ALL' ? 'DRESS_AND_GIFTS' : mode;
+    const [categories, productsData] = await Promise.all([
+      this.getCategories(effectiveMode),
+      this.getProducts({ mode: effectiveMode, categorySlug }),
+    ]);
 
-      return {
-        categories: Array.isArray(categories) ? categories : [],
-        products: (productsData?.items || []) as CatalogProduct[],
-      };
-    } catch {
-      const categories = FALLBACK_CATEGORIES.filter(
-        (c) => mode === 'ALL' || c.modeGroup === mode,
-      );
-      const products = FALLBACK_PRODUCTS.filter((p) => {
-        const modeMatches = mode === 'ALL' || p.category.modeGroup === mode;
-        const catMatches = !categorySlug || p.category.slug === categorySlug;
-        return modeMatches && catMatches;
-      });
-      return { categories, products };
-    }
+    return {
+      categories: Array.isArray(categories) ? categories : [],
+      products: (productsData?.items || []) as CatalogProduct[],
+    };
   }
 }
 

@@ -9,25 +9,17 @@ import { Icon } from '@/elements';
 export const BottomNav: React.FC = () => {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
-  const { activeMode } = useAppSelector((s) => s.app);
   const { isAuthenticated } = useAppSelector((s) => s.userAuth);
 
-  const isHomeRoute =
-    pathname === '/' || pathname === '/boutique' || pathname === '/foods';
-  const isAllActive = isHomeRoute && activeMode === 'ALL' && pathname === '/';
-  const isBoutiqueActive =
-    pathname === '/boutique' ||
-    (isHomeRoute && activeMode === 'DRESS_AND_GIFTS');
-  const isFoodsActive =
-    pathname === '/foods' || (isHomeRoute && activeMode === 'FOODS_ONLY');
+  const isHomeActive = pathname === '/' || pathname === '/boutique';
   const isCatalogActive = pathname?.startsWith('/products') ?? false;
   const isOrdersActive = pathname?.startsWith('/orders') ?? false;
   const isProfileActive = pathname?.startsWith('/profile') ?? false;
 
   const baseTabStyle =
-    'flex flex-col items-center justify-center px-1.5 sm:px-4 py-1 text-on-surface-variant hover:text-on-surface transition-all';
+    'flex flex-col items-center justify-center px-3 sm:px-5 py-1 text-on-surface-variant hover:text-on-surface transition-all';
   const activeTabStyle =
-    'flex flex-col items-center justify-center bg-primary/15 text-primary border border-primary/25 rounded-xl px-1.5 sm:px-4 py-1 transition-all shadow-[inset_0_1px_0_rgba(229,194,128,0.15)]';
+    'flex flex-col items-center justify-center bg-primary/15 text-primary border border-primary/25 rounded-xl px-3 sm:px-5 py-1 transition-all shadow-[inset_0_1px_0_rgba(229,194,128,0.15)]';
 
   return (
     <nav
@@ -36,43 +28,18 @@ export const BottomNav: React.FC = () => {
     >
       <Link
         href="/"
-        onClick={() => dispatch(setStorefrontMode('ALL'))}
-        className={isAllActive ? activeTabStyle : baseTabStyle}
-      >
-        <Icon name="home" filled={isAllActive} className="text-[22px]" />
-        <span className="font-label-sm text-[9px] sm:text-[10px] tracking-tight sm:tracking-wide font-semibold mt-0.5 whitespace-nowrap">
-          All
-        </span>
-      </Link>
-
-      <Link
-        href="/boutique"
         onClick={() => dispatch(setStorefrontMode('DRESS_AND_GIFTS'))}
-        className={isBoutiqueActive ? activeTabStyle : baseTabStyle}
+        className={isHomeActive ? activeTabStyle : baseTabStyle}
       >
-        <Icon
-          name="checkroom"
-          filled={isBoutiqueActive}
-          className="text-[22px]"
-        />
+        <Icon name="home" filled={isHomeActive} className="text-[22px]" />
         <span className="font-label-sm text-[9px] sm:text-[10px] tracking-tight sm:tracking-wide font-semibold mt-0.5 whitespace-nowrap">
-          Boutique
-        </span>
-      </Link>
-
-      <Link
-        href="/foods"
-        onClick={() => dispatch(setStorefrontMode('FOODS_ONLY'))}
-        className={isFoodsActive ? activeTabStyle : baseTabStyle}
-      >
-        <Icon name="nutrition" filled={isFoodsActive} className="text-[22px]" />
-        <span className="font-label-sm text-[9px] sm:text-[10px] tracking-tight sm:tracking-wide font-semibold mt-0.5 whitespace-nowrap">
-          Pure Foods
+          Home
         </span>
       </Link>
 
       <Link
         href="/products"
+        onClick={() => dispatch(setStorefrontMode('DRESS_AND_GIFTS'))}
         className={isCatalogActive ? activeTabStyle : baseTabStyle}
       >
         <Icon

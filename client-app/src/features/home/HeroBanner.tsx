@@ -58,49 +58,49 @@ const HERO_CONTENT: Record<
     ],
   },
   DRESS_AND_GIFTS: {
-    pill: 'Pure Cotton Apparel & Bespoke Gifting',
-    title: 'Breathable Pure Cotton Dresses, Kurtas & Gift Hampers.',
+    pill: 'Pure Cotton Apparel & Gifting Boutique • Crafted Like Family',
+    title: 'Pure Cotton Tops, Shirts, Pants, Shawls & Gift Hampers.',
     subtitle:
-      'Crafted exclusively for adults in 100% handblock mulmul and 60x60 cambric cotton (Sizes S–XL), paired with zero-size-risk artisanal stoles and festive keepsake boxes.',
-    ctaPrimary: 'Browse Boutique Collection',
+      "Crafted in 100% breathable mulmul, cambric, and handloom slub cotton—featuring women's tops & pants, men's cotton shirts & trousers, free-size shawls (shaal), and festive keepsake hampers.",
+    ctaPrimary: 'Explore Cotton & Hamper Collection',
     imageUrl:
       'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1000&q=85',
-    overlayBadge: "Adult Women's S–XL & Free-Size Stoles",
-    overlayTitle: 'Handblock Indigo & Bagh-Print Cotton Collection',
-    overlaySub: 'Zero synthetic lining • Pre-washed • Concealed pockets',
+    overlayBadge: '100% Pure Cotton & Free-Size Shawls',
+    overlayTitle: "Women's & Men's Pure Cotton Wear + Festive Hampers",
+    overlaySub: 'Zero synthetic lining • Pre-washed • Personal fit confirmation',
     stats: [
       {
         value: '100% Pure Cotton',
-        label: 'Handblock Mulmul & 60s Cambric',
+        label: 'Mulmul, Cambric & Handloom Slub',
         colorClass: 'text-primary',
       },
       {
-        value: 'Adult S–XL',
-        label: "Women's Dresses & Kurta Sets",
+        value: 'Women & Men',
+        label: 'Tops, Shirts & Straight Pants',
         colorClass: 'text-secondary',
       },
       {
-        value: 'Free-Size Stoles',
-        label: 'Artisanal Weaves & Gift Boxes',
+        value: 'Free-Size Shaal',
+        label: 'Artisanal Shawls & Gift Hampers',
         colorClass: 'text-primary',
       },
     ],
   },
   FOODS_ONLY: {
-    pill: "Clean Kids' & Family Pantry (Ages 3+)",
-    title: 'Wholesome Millet, A2 Ghee & Organic Jaggery Snacks.',
+    pill: 'Pure Homemade Foods • Small-Batch Kitchen',
+    title: 'Pure Bilona A2 Cow Ghee & Organic Jaggery Dry Fruits Laddu.',
     subtitle:
-      'Prepared in small weekly batches with sprouted ragi, almonds, and pure cow ghee—zero maida, zero refined white sugar, and zero palm oil.',
+      'Prepared in small weekly batches using traditional curd-churned Gir cow A2 ghee, crunchy dry fruits, dates, and organic jaggery—zero refined sugar or preservatives.',
     ctaPrimary: 'Reserve Fresh Batch Jars',
     imageUrl:
-      'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=1000&q=85',
+      'https://images.unsplash.com/photo-1605197584547-c93aa1cd8d6b?auto=format&fit=crop&w=1000&q=85',
     overlayBadge: 'Weekly Fresh Batch',
-    overlayTitle: 'Pure A2 Ghee Ragi Cookies & Sprouted Ragi Drink Mix',
-    overlaySub: 'Orders close Wednesday • Roasted Thursday • Delivered Friday',
+    overlayTitle: 'Bilona A2 Cultured Cow Ghee & Dry Fruits Laddu',
+    overlaySub: 'Orders close Wednesday • Prepared Thursday • Delivered Friday',
     stats: [
       {
-        value: 'Zero Maida',
-        label: '100% Sprouted Ragi & Millet',
+        value: 'Bilona A2 Ghee',
+        label: 'Traditional Curd-Churned Gir Cow',
         colorClass: 'text-tertiary',
       },
       {
@@ -109,8 +109,8 @@ const HERO_CONTENT: Record<
         colorClass: 'text-secondary',
       },
       {
-        value: 'Pure A2 Ghee',
-        label: 'Fresh Weekly Small Batches',
+        value: 'Rich Dry Fruits',
+        label: 'Almonds, Cashews, Pistachios & Dates',
         colorClass: 'text-primary',
       },
     ],

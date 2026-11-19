@@ -15,7 +15,6 @@ import {
 import {
   CatalogProduct,
   catalogService,
-  FALLBACK_PRODUCTS,
   isFoodProduct,
 } from '@/services';
 import { Header, AdvisoryStrip, BottomNav, Footer } from '@/components';
@@ -33,18 +32,40 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
   const totalCartItems = useAppSelector(selectCartTotalItems);
   const { whatsappPhone } = useAppSelector((s) => s.app);
 
-  const [products, setProducts] = useState<CatalogProduct[]>(FALLBACK_PRODUCTS);
+  const [product, setProduct] = useState<CatalogProduct | null>(null);
+  const [loading, setLoading] = useState(true);
   const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
 
   useEffect(() => {
-    catalogService.getCatalogByMode('ALL').then((data) => {
-      if (data.products.length > 0) {
-        setProducts(data.products);
-      }
-    });
-  }, []);
+    setLoading(true);
+    catalogService
+      .getProductById(productId)
+      .then((item) => {
+        setProduct(item);
+      })
+      .catch(() => {
+        setProduct(null);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [productId]);
 
-  const product = products.find((p) => p.id === productId);
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-surface">
+        <Header />
+        <main className="flex-1 pt-24 pb-24 px-4 sm:px-6 max-w-6xl mx-auto w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="lg:col-span-5 h-96 rounded-3xl cred-card animate-pulse" />
+            <div className="lg:col-span-7 h-96 rounded-3xl cred-card animate-pulse" />
+          </div>
+        </main>
+        <Footer />
+        <BottomNav />
+      </div>
+    );
+  }
 
   if (!product) {
     return (

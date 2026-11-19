@@ -10,8 +10,8 @@ interface AppState {
 }
 
 const initialState: AppState = {
-  activeMode: 'ALL',
-  allowModeSwitching: true,
+  activeMode: 'DRESS_AND_GIFTS',
+  allowModeSwitching: false,
   nextFoodBatchLabel: 'Next Fresh Batch: Friday (Orders close Wednesday)',
   whatsappPhone: '919876543210',
 };
@@ -32,7 +32,10 @@ const appSlice = createSlice({
         whatsappPhone?: string;
       }>,
     ) {
-      if (action.payload.defaultMode) {
+      if (
+        action.payload.defaultMode &&
+        action.payload.defaultMode !== 'ALL'
+      ) {
         state.activeMode = action.payload.defaultMode;
       }
       if (action.payload.allowModeSwitching !== undefined) {
