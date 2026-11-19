@@ -53,10 +53,38 @@ export class CatalogService extends HttpFactory {
       this.getProducts({ mode: effectiveMode, categorySlug }),
     ]);
 
+    const rawCategories = Array.isArray(categories) ? categories : [];
+    const rawProducts = (productsData?.items || []) as CatalogProduct[];
+
     return {
-      categories: Array.isArray(categories) ? categories : [],
-      products: (productsData?.items || []) as CatalogProduct[],
+      categories: rawCategories.filter((c) => c.slug !== 'hampers'),
+      products: rawProducts.filter(
+        (p) =>
+          p.category?.slug !== 'hampers' && p.productType !== 'GIFT_HAMPER',
+      ),
     };
+  }
+
+  async getGiftingCatalog(): Promise<{
+    curatableProducts: CatalogProduct[];
+    readyHampers: CatalogProduct[];
+  }> {
+    const productsData = await this.getProducts();
+    const allProducts = (productsData?.items || []) as CatalogProduct[];
+
+    const curatableProducts = allProducts.filter(
+      (p) =>
+        p.category?.slug === 'stoles' ||
+        p.category?.modeGroup === 'FOODS_ONLY' ||
+        p.productType === 'FOOD',
+    );
+
+    const readyHampers = allProducts.filter(
+      (p) =>
+        p.category?.slug === 'hampers' || p.productType === 'GIFT_HAMPER',
+    );
+
+    return { curatableProducts, readyHampers };
   }
 }
 

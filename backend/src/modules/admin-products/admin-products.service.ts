@@ -114,6 +114,7 @@ export class AdminProductsService {
       include: {
         category: true,
         variants: {
+          where: { isActive: true },
           orderBy: { price: 'asc' },
         },
       },

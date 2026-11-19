@@ -115,6 +115,18 @@ export const Header: React.FC<HeaderProps> = ({
           </Link>
 
           <Link
+            href="/gifts"
+            className={`hidden lg:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-label-md font-label-md border transition-all ${
+              pathname?.startsWith('/gifts')
+                ? 'bg-primary/15 text-primary border-primary/35'
+                : 'bg-[#11131c] hover:bg-[#181b28] text-on-surface border-white/[0.08]'
+            }`}
+          >
+            <Icon name="redeem" className="text-[18px] text-primary" />
+            <span>Gifts</span>
+          </Link>
+
+          <Link
             href="/checkout"
             aria-label="Shopping Bag"
             className="relative p-2.5 rounded-full bg-[#11131c] hover:bg-[#181b28] border border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-all flex items-center justify-center active:scale-95"

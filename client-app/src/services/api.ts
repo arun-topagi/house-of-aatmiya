@@ -77,8 +77,13 @@ export async function fetchCatalogByMode(
 
   const categories: CatalogCategory[] = catRes?.data || catRes || [];
   const productsData = prodRes?.data || prodRes;
+  const rawCategories = Array.isArray(categories) ? categories : [];
+  const rawProducts = (productsData?.items || []) as CatalogProduct[];
   return {
-    categories: Array.isArray(categories) ? categories : [],
-    products: (productsData?.items || []) as CatalogProduct[],
+    categories: rawCategories.filter((c) => c.slug !== 'hampers'),
+    products: rawProducts.filter(
+      (p) =>
+        p.category?.slug !== 'hampers' && p.productType !== 'GIFT_HAMPER',
+    ),
   };
 }

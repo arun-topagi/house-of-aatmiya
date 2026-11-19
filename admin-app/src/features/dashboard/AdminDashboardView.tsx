@@ -49,7 +49,7 @@ const CATEGORY_MAP: Record<
     id: 'cat-stoles',
     slug: 'stoles',
     modeGroup: 'DRESS_AND_GIFTS',
-    name: { en: 'Free-Size Cotton Shawls' },
+    name: { en: 'Free-Size Cotton Stoles' },
   },
   hampers: {
     id: 'cat-hampers',

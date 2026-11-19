@@ -113,9 +113,9 @@ export const ProductsCatalogView: React.FC = () => {
         <AdvisoryStrip />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
-          {/* Breadcrumb & Mode Header */}
-          <div className="cred-card rounded-3xl p-6 mb-6">
-            <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.08em] sm:tracking-[0.16em] text-on-surface-variant mb-2 whitespace-nowrap">
+          {/* Top Breadcrumb & Compact Search Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+            <div className="flex items-center gap-2 text-label-sm text-on-surface-variant">
               <Link
                 href="/"
                 className="hover:text-primary transition-colors flex items-center gap-1"
@@ -125,43 +125,38 @@ export const ProductsCatalogView: React.FC = () => {
               </Link>
               <Icon name="chevron_right" className="text-sm" />
               <span className="text-primary font-bold">Catalog</span>
+              {selectedCategorySlug && (
+                <>
+                  <Icon name="chevron_right" className="text-sm" />
+                  <span className="text-on-surface font-medium truncate">
+                    {selectedCategoryName}
+                  </span>
+                </>
+              )}
             </div>
 
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h1 className="font-headline-lg text-headline-lg text-on-surface">
-                  {selectedCategoryName}
-                </h1>
-                <p className="text-body-md text-on-surface-variant mt-1">
-                  Women&apos;s &amp; men&apos;s pure cotton tops, shirts &amp;
-                  pants, free-size cotton shawls (shaal), and signature gift
-                  hampers
-                </p>
-              </div>
-
-              {/* Search Input on Catalog Page */}
-              <div className="relative w-full md:w-80">
-                <Icon
-                  name="search"
-                  className="text-on-surface-variant text-lg absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-                />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by dress, kurta, stole..."
-                  className="w-full bg-[#090a0f] focus:bg-[#0d0f16] text-on-surface placeholder:text-on-surface-variant/60 font-body-md text-body-md pl-10 pr-9 py-2.5 rounded-xl border border-white/[0.08] focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface cursor-pointer"
-                  >
-                    <Icon name="close" className="text-base" />
-                  </button>
-                )}
-              </div>
+            <div className="relative w-full sm:w-64 md:w-72">
+              <Icon
+                name="search"
+                className="text-on-surface-variant text-base absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search cotton top, pant, stole..."
+                className="w-full bg-[#11131c] focus:bg-[#151824] text-on-surface placeholder:text-on-surface-variant/60 font-body-sm text-body-sm pl-9 pr-8 py-2 rounded-xl border border-white/[0.08] focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface cursor-pointer"
+                  aria-label="Clear search"
+                >
+                  <Icon name="close" className="text-sm" />
+                </button>
+              )}
             </div>
           </div>
 

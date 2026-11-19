@@ -86,7 +86,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ forcedMode }) => {
   const selectedCategoryName = useMemo(() => {
     if (!selectedCategorySlug) {
       if (effectiveMode === 'DRESS_AND_GIFTS') {
-        return 'Pure Cotton Apparel, Free-Size Shawls & Gift Hampers';
+        return "Women's & Men's Pure Cotton Wear & Free-Size Stoles";
       }
       if (effectiveMode === 'FOODS_ONLY') {
         return 'Pure Bilona A2 Cow Ghee & Dry Fruits Laddu';

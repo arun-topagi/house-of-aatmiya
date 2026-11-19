@@ -13,13 +13,14 @@ export const BottomNav: React.FC = () => {
 
   const isHomeActive = pathname === '/' || pathname === '/boutique';
   const isCatalogActive = pathname?.startsWith('/products') ?? false;
+  const isGiftsActive = pathname?.startsWith('/gifts') ?? false;
   const isOrdersActive = pathname?.startsWith('/orders') ?? false;
   const isProfileActive = pathname?.startsWith('/profile') ?? false;
 
   const baseTabStyle =
-    'flex flex-col items-center justify-center px-3 sm:px-5 py-1 text-on-surface-variant hover:text-on-surface transition-all';
+    'flex flex-col items-center justify-center px-2.5 sm:px-4 py-1 text-on-surface-variant hover:text-on-surface transition-all';
   const activeTabStyle =
-    'flex flex-col items-center justify-center bg-primary/15 text-primary border border-primary/25 rounded-xl px-3 sm:px-5 py-1 transition-all shadow-[inset_0_1px_0_rgba(229,194,128,0.15)]';
+    'flex flex-col items-center justify-center bg-primary/15 text-primary border border-primary/25 rounded-xl px-2.5 sm:px-4 py-1 transition-all shadow-[inset_0_1px_0_rgba(229,194,128,0.15)]';
 
   return (
     <nav
@@ -49,6 +50,16 @@ export const BottomNav: React.FC = () => {
         />
         <span className="font-label-sm text-[9px] sm:text-[10px] tracking-tight sm:tracking-wide font-semibold mt-0.5 whitespace-nowrap">
           Catalog
+        </span>
+      </Link>
+
+      <Link
+        href="/gifts"
+        className={isGiftsActive ? activeTabStyle : baseTabStyle}
+      >
+        <Icon name="redeem" filled={isGiftsActive} className="text-[22px]" />
+        <span className="font-label-sm text-[9px] sm:text-[10px] tracking-tight sm:tracking-wide font-semibold mt-0.5 whitespace-nowrap">
+          Gifts
         </span>
       </Link>
 

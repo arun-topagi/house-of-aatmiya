@@ -58,15 +58,15 @@ const HERO_CONTENT: Record<
     ],
   },
   DRESS_AND_GIFTS: {
-    pill: 'Pure Cotton Apparel & Gifting Boutique • Crafted Like Family',
-    title: 'Pure Cotton Tops, Shirts, Pants, Shawls & Gift Hampers.',
+    pill: 'Pure Cotton Apparel Boutique • Crafted Like Family',
+    title: 'Pure Cotton Tops, Shirts, Straight Pants & Free-Size Stoles.',
     subtitle:
-      "Crafted in 100% breathable mulmul, cambric, and handloom slub cotton—featuring women's tops & pants, men's cotton shirts & trousers, free-size shawls (shaal), and festive keepsake hampers.",
-    ctaPrimary: 'Explore Cotton & Hamper Collection',
+      "Crafted in 100% breathable mulmul, cambric, and handloom slub cotton—featuring women's tops & pants, men's cotton shirts & trousers, and artisanal free-size stoles.",
+    ctaPrimary: 'Explore Cotton Collection',
     imageUrl:
       'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1000&q=85',
-    overlayBadge: '100% Pure Cotton & Free-Size Shawls',
-    overlayTitle: "Women's & Men's Pure Cotton Wear + Festive Hampers",
+    overlayBadge: '100% Pure Cotton & Free-Size Stoles',
+    overlayTitle: "Women's & Men's Pure Cotton Wear + Handcrafted Stoles",
     overlaySub: 'Zero synthetic lining • Pre-washed • Personal fit confirmation',
     stats: [
       {
@@ -80,8 +80,8 @@ const HERO_CONTENT: Record<
         colorClass: 'text-secondary',
       },
       {
-        value: 'Free-Size Shaal',
-        label: 'Artisanal Shawls & Gift Hampers',
+        value: 'Free-Size Stoles',
+        label: 'Artisanal Handblock Cotton Stoles',
         colorClass: 'text-primary',
       },
     ],

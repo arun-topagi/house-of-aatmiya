@@ -68,7 +68,7 @@ export const OrdersView: React.FC = () => {
                 <span className="text-primary font-bold">My Orders</span>
               </div>
               <h1 className="font-headline-lg text-headline-lg text-on-surface">
-                My Orders &amp; Batch History
+                My Orders
               </h1>
             </div>
 

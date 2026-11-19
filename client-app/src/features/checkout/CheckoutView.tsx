@@ -638,7 +638,7 @@ export const CheckoutView: React.FC = () => {
                           </p>
                           <p className="text-body-sm text-on-surface-variant">
                             Try a sample curation (1 Pure Cotton Top + 1
-                            Free-Size Cotton Shawl) or explore the catalog.
+                            Free-Size Cotton Stole) or explore the catalog.
                           </p>
                         </div>
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 max-w-sm sm:max-w-none mx-auto pt-1">

@@ -59,11 +59,11 @@ async function seedProducts() {
         slug: 'stoles',
         modeGroup: 'DRESS_AND_GIFTS',
         name: {
-          en: 'Free-Size Cotton Shawls',
-          tagline: 'Free-Size Artisanal Mulmul & Handblock Cotton Shawls (Shaal)',
+          en: 'Free-Size Cotton Stoles',
+          tagline: 'Free-Size Artisanal Mulmul & Handblock Cotton Stoles',
         },
         description: {
-          en: 'Feather-soft free-size pure cotton shawls in natural indigo, maroon, and ivory—ideal for everyday layering or thoughtful gifting.',
+          en: 'Feather-soft free-size pure cotton stoles in natural indigo, maroon, and ivory—ideal for everyday layering or thoughtful gifting.',
         },
       },
       {
@@ -74,7 +74,7 @@ async function seedProducts() {
           tagline: 'Festive, Family & Corporate Gifting Curations',
         },
         description: {
-          en: 'Premium keepsake hampers combining free-size pure cotton shawls, Bilona A2 Cow Ghee, and Dry Fruits Laddus with a personalized family note.',
+          en: 'Premium keepsake hampers combining free-size pure cotton stoles, Bilona A2 Cow Ghee, and Dry Fruits Laddus with a personalized family note.',
         },
       },
       {
@@ -178,12 +178,12 @@ async function seedProducts() {
         sku: 'HOA-ST-01',
         productType: 'APPAREL',
         name: {
-          en: 'Free-Size Handcrafted Pure Mulmul Cotton Shawl (Shaal)',
+          en: 'Free-Size Handcrafted Pure Mulmul Cotton Stole',
           subtitle: 'Free Size (2.2m × 0.85m) • Featherlight & Hand-Tasselled',
-          badge: 'Free-Size Shaal',
+          badge: 'Free-Size Stole',
         },
         description: {
-          en: 'Artisanal free-size pure mulmul cotton shawl (shaal) hand-block printed with natural dyes. Cloud-soft, breathable, and gets softer with every wash.',
+          en: 'Artisanal free-size pure mulmul cotton stole hand-block printed with natural dyes. Cloud-soft, breathable, and gets softer with every wash.',
         },
         usage: {
           en: 'Dimensions: 220 cm × 85 cm (Free Size). 100% Pure Mulmul Cotton with hand-twisted tassels.',
@@ -256,12 +256,12 @@ async function seedProducts() {
         sku: 'HOA-HM-01',
         productType: 'GIFT_HAMPER',
         name: {
-          en: 'Classic Family Gift Hamper (Cotton Shawl + Dry Fruits Laddu)',
-          subtitle: '1 Free-Size Pure Cotton Shawl + 250g Dry Fruits Laddu Box + Family Note',
+          en: 'Classic Family Gift Hamper (Cotton Stole + Dry Fruits Laddu)',
+          subtitle: '1 Free-Size Pure Cotton Stole + 250g Dry Fruits Laddu Box + Family Note',
           badge: 'Classic Gift Box',
         },
         description: {
-          en: 'A warm keepsake gift box pairing 1 Handcrafted Free-Size Pure Mulmul Cotton Shawl (Shaal) with 1 Box of Pure Ghee Dry Fruits Laddus (250g) and a personalized family note.',
+          en: 'A warm keepsake gift box pairing 1 Handcrafted Free-Size Pure Mulmul Cotton Stole with 1 Box of Pure Ghee Dry Fruits Laddus (250g) and a personalized family note.',
         },
         usage: {
           en: 'Ideal for family celebrations, housewarmings, and festive gifting.',
@@ -271,7 +271,7 @@ async function seedProducts() {
         ],
         isFeatured: true,
         variants: [
-          { sizePack: 'Classic Hamper (Shawl + 250g Laddu)', costPrice: 620, price: 1490, stockQty: 20, isMadeToBatch: true },
+          { sizePack: 'Classic Hamper (Stole + 250g Laddu)', costPrice: 620, price: 1490, stockQty: 20, isMadeToBatch: true },
         ],
       },
       {
@@ -279,12 +279,12 @@ async function seedProducts() {
         sku: 'HOA-HM-02',
         productType: 'GIFT_HAMPER',
         name: {
-          en: 'Royal Festive Gift Hamper (Cotton Shawl + A2 Ghee + Dry Fruits Laddu)',
-          subtitle: '1 Pure Cotton Shawl + 250ml Bilona A2 Ghee + 250g Dry Fruits Laddu',
+          en: 'Royal Festive Gift Hamper (Cotton Stole + A2 Ghee + Dry Fruits Laddu)',
+          subtitle: '1 Pure Cotton Stole + 250ml Bilona A2 Ghee + 250g Dry Fruits Laddu',
           badge: 'Royal Keepsake Box',
         },
         description: {
-          en: 'Our grand festive and wedding hamper featuring 1 Free-Size Pure Mulmul Cotton Shawl, 1 Glass Jar of Pure Bilona A2 Cow Ghee (250ml), 1 Box of Dry Fruits Laddus (250g), and a wax-sealed gift note.',
+          en: 'Our grand festive and wedding hamper featuring 1 Free-Size Pure Mulmul Cotton Stole, 1 Glass Jar of Pure Bilona A2 Cow Ghee (250ml), 1 Box of Dry Fruits Laddus (250g), and a wax-sealed gift note.',
         },
         usage: {
           en: 'Available for premium individual gifting and bulk wedding/corporate orders (25–50+ boxes).',
@@ -294,7 +294,7 @@ async function seedProducts() {
         ],
         isFeatured: true,
         variants: [
-          { sizePack: 'Royal Box (Shawl + A2 Ghee + Laddu)', costPrice: 950, price: 2290, stockQty: 15, isMadeToBatch: true },
+          { sizePack: 'Royal Box (Stole + A2 Ghee + Laddu)', costPrice: 950, price: 2290, stockQty: 15, isMadeToBatch: true },
         ],
       },
 
@@ -351,13 +351,28 @@ async function seedProducts() {
 
     const activeSkus = productsData.map((p) => p.sku);
 
-    // Deactivate any older SKUs not in the new 9-product seed list
+    // Clear previous unreferenced products & variants before upserting updated catalog
+    // (Any variant referenced by historical order_items is safely deactivated instead of violating FK constraints)
+    await client.query(
+      `DELETE FROM "product_variants"
+       WHERE "product_id" IN (SELECT "id" FROM "products" WHERE "sku" != ALL($1::text[]))
+         AND "id" NOT IN (SELECT DISTINCT "variant_id" FROM "order_items");`,
+      [activeSkus],
+    );
+    await client.query(
+      `DELETE FROM "products"
+       WHERE "sku" != ALL($1::text[])
+         AND "id" NOT IN (
+           SELECT DISTINCT pv."product_id"
+           FROM "product_variants" pv
+           JOIN "order_items" oi ON oi."variant_id" = pv."id"
+         );`,
+      [activeSkus],
+    );
     await client.query(
       `UPDATE "product_variants"
        SET "is_available" = false, "is_active" = false
-       WHERE "product_id" IN (
-         SELECT "id" FROM "products" WHERE "sku" != ALL($1::text[])
-       );`,
+       WHERE "product_id" IN (SELECT "id" FROM "products" WHERE "sku" != ALL($1::text[]));`,
       [activeSkus],
     );
     await client.query(
@@ -396,8 +411,15 @@ async function seedProducts() {
       );
       const productId = prodRes.rows[0].id;
 
-      // Deactivate old variants for this product before upserting current variants
+      // Clear unreferenced old variants for this product before upserting current variants
       const activeSizePacks = p.variants.map((v) => v.sizePack);
+      await client.query(
+        `DELETE FROM "product_variants"
+         WHERE "product_id" = $1
+           AND "size_pack" != ALL($2::text[])
+           AND "id" NOT IN (SELECT DISTINCT "variant_id" FROM "order_items");`,
+        [productId, activeSizePacks],
+      );
       await client.query(
         `UPDATE "product_variants"
          SET "is_available" = false, "is_active" = false
